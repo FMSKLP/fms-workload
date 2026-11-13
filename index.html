@@ -321,6 +321,20 @@ td.act .acts{display:inline-flex;gap:6px}
 .qchip:hover{border-color:var(--accent);color:var(--ink)}
 .dxmanage{display:flex;flex-wrap:wrap;gap:6px;max-height:260px;overflow:auto;padding:2px}
 .dxmanage .dxchip{background:var(--sunk)}
+.ctgroup{display:grid;grid-template-columns:4.2em 1fr;gap:6px 8px;align-items:start}
+.ctgroup+.ctgroup{margin-top:8px}
+.ctg{font-size:.78rem;font-weight:700;color:var(--muted);padding-top:6px;letter-spacing:.02em}
+.ctchips{display:flex;flex-wrap:wrap;gap:6px}
+.ct{position:relative;display:inline-flex}
+.ct input{position:absolute;opacity:0;width:1px;height:1px}
+.ct span{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 11px;font-size:.85rem;cursor:pointer;user-select:none;color:var(--ink)}
+.ct input:checked+span{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.ct input:checked+span::before{content:'✓ '}
+.ct input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+.ctadd{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center}
+.ctadd select{width:auto;flex:none}
+.ctadd input{flex:1;min-width:8em;max-width:18em}
+.ttag{display:inline-block;font-size:.72rem;font-weight:600;padding:0 7px;border-radius:999px;background:var(--sunk);color:var(--muted);margin:2px 3px 0 0;white-space:nowrap}
 .dxtop{display:grid;gap:6px;margin:0;padding:0;list-style:none}
 .dxtop li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:baseline;font-size:.9rem}
 .dxtop li .bar{grid-column:1 / -1;height:5px}
@@ -486,6 +500,18 @@ td.act .acts{display:inline-flex;gap:6px}
             <div class="dxquick" id="dxQuick" aria-label="Frequently used diagnoses"></div>
             <span class="hint">New diagnoses are saved to your list for next time. Manage the list in Settings.</span>
           </div>
+          <div class="field"><span class="flabel" id="ctLbl">Case type <span class="hint" style="font-weight:400">optional · pick all that apply</span></span>
+            <div role="group" aria-labelledby="ctLbl" id="ctBox">
+              <div class="ctgroup"><span class="ctg">OPD</span><div class="ctchips" id="ctOPD"></div></div>
+              <div class="ctgroup"><span class="ctg">MCH</span><div class="ctchips" id="ctMCH"></div></div>
+            </div>
+            <div class="ctadd">
+              <select id="ctNewG" aria-label="Group for new case type"><option value="OPD">OPD</option><option value="MCH">MCH</option></select>
+              <input id="ctNew" maxlength="40" placeholder="Add your own" autocomplete="off" enterkeyhint="done">
+              <button type="button" class="btn sm" id="ctAddBtn">Add</button>
+            </div>
+            <span class="hint">One patient can be several, e.g. NCD + Men's Health + TB clinic.</span>
+          </div>
           <div class="field"><span class="flabel" id="cxLbl">Complexity of case <span class="req">*</span></span>
             <div class="cx" role="radiogroup" aria-labelledby="cxLbl">
               <label><input type="radio" name="cx" id="cx05" value="0.5"><span class="t">Simple</span><span class="mult">× 0.5</span></label>
@@ -586,6 +612,10 @@ td.act .acts{display:inline-flex;gap:6px}
     <section class="panel card" aria-labelledby="hNon">
       <div class="panel-head"><h2 id="hNon">Admin / Others</h2><span class="muted small">Hours this month</span></div>
       <div class="brows" id="ncRows"></div>
+    </section>
+    <section class="panel card" aria-labelledby="hCt">
+      <div class="panel-head"><h2 id="hCt">Case types</h2><span class="muted small">Cases this month</span></div>
+      <ul class="dxtop" id="ctTop"></ul>
     </section>
     <section class="panel card" aria-labelledby="hDx">
       <div class="panel-head"><h2 id="hDx">Top diagnoses</h2><span class="muted small">This month</span></div>
@@ -913,7 +943,8 @@ function examples(){
     const date=ymd(d);
     const nF=3+Math.floor(r()*5), nM=2+Math.floor(r()*5), nP=r()<.5?Math.floor(r()*2)+1:0;
     const dxPick=()=>{const a=[pick(DX)];if(r()<.35){const b=pick(DX);if(b!==a[0])a.push(b)}return a};
-    for(let i=0;i<nF;i++) {const cx=cxPick();clin.push({id:uid(),date,type:'fms',ic4:ic(),dx:dxPick(),cx,mins:cx===2?30+5*Math.floor(r()*4):cx===1.5?20+5*Math.floor(r()*3):10+5*Math.floor(r()*3),note:'',example:true})}
+    const tagPick=()=>{const u=r();return u<.25?undefined:u<.6?['OPD: NCD']:u<.75?['OPD: NCD','OPD: Men\'s Health']:u<.85?['OPD: CDC','OPD: TB Clinic']:u<.93?['MCH: Obstetric']:['MCH: Child Health']};
+    for(let i=0;i<nF;i++) {const cx=cxPick();clin.push({id:uid(),date,type:'fms',ic4:ic(),dx:dxPick(),tags:tagPick(),cx,mins:cx===2?30+5*Math.floor(r()*4):cx===1.5?20+5*Math.floor(r()*3):10+5*Math.floor(r()*3),note:'',example:true})}
     for(let i=0;i<nM;i++) clin.push({id:uid(),date,type:'mo',ic4:ic(),dx:dxPick(),cx:cxPick(),mins:10+5*Math.floor(r()*3),note:r()<.2?'Discussed with MO, plan revised':'',example:true});
     for(let i=0;i<nP;i++) clin.push({id:uid(),date,type:'proc',ic4:ic(),dx:[pick(PROC)],cx:r()<.6?1:1.5,mins:20+10*Math.floor(r()*3),note:'',example:true});
     if(wd===1) nc.push({id:uid(),date,type:'meet',other:'',details:'Weekly KK management meeting',mins:60,note:'',example:true});
@@ -931,6 +962,18 @@ function load(){try{const t=localStorage.getItem(KEY);if(!t)return null;const o=
 let state=load()||blank();
 const dxs=e=>Array.isArray(e.dx)?e.dx:(e.dx?[String(e.dx)]:[]);
 const dxStr=e=>dxs(e).join('; ');
+// case types: 'OPD: NCD' etc. Optional, several per patient.
+const CT_BASE={OPD:['NCD','CDC','Men\'s Health','Quit Smoking','ID Clinic','TB Clinic'],MCH:['Obstetric','Gynaecology','Child Health']};
+const tagsOf=e=>Array.isArray(e.tags)?e.tags.filter(t=>typeof t==='string'&&/^(OPD|MCH): ./.test(t)):[];
+const tagLabel=t=>t.replace(/^(OPD|MCH): /,'');
+const tagStr=e=>tagsOf(e).join('; ');
+function ctAll(){const L={OPD:CT_BASE.OPD.slice(),MCH:CT_BASE.MCH.slice()};
+  (state.ctList||[]).concat(...state.clinical.map(tagsOf)).forEach(t=>{const m=/^(OPD|MCH): (.+)$/.exec(t);if(m&&!L[m[1]].some(x=>x.toLowerCase()===m[2].toLowerCase()))L[m[1]].push(m[2])});return L}
+let pendingCt=[];
+function renderCt(){const L=ctAll();
+  ['OPD','MCH'].forEach(g=>{$('ct'+g).innerHTML=L[g].map(n=>{const v=g+': '+n;return `<label class="ct"><input type="checkbox" value="${esc(v)}"${pendingCt.includes(v)?' checked':''}><span>${esc(n)}</span></label>`}).join('')})}
+function parseTags(s){return String(s||'').split(/[;\n]/).map(x=>x.trim()).filter(Boolean).map(x=>{const m=/^(OPD|MCH)\s*[:\-·]\s*(.+)$/i.exec(x);if(m)return m[1].toUpperCase()+': '+m[2].trim();
+  const k=x.toLowerCase();for(const g of ['OPD','MCH'])for(const n of CT_BASE[g])if(n.toLowerCase()===k)return g+': '+n;return 'OPD: '+x})}
 const dxKey=s=>String(s).trim().toLowerCase();
 function normalize(s){
   s.targets=s.targets||{weighted:0,hours:0};
@@ -985,6 +1028,7 @@ $('setupForm').addEventListener('submit',ev=>{ev.preventDefault();submitSetup()}
 
 function render(){
   const mi=monthInfo(), p=state.profile||{};
+  renderCt();
   $('who').innerHTML=`<strong>${esc(p.name)}</strong> · ${esc(p.kk)}${p.district?` · ${esc(p.district)}`:''}`;
   $('monthLabel').textContent=MONTHS[vm]+' '+vy;
   const hasEx=state.clinical.some(e=>e.example)||state.nonclinical.some(e=>e.example);
@@ -1037,6 +1081,12 @@ function render(){
   $('dxTop').innerHTML=top.length?top.map(t=>`<li><span>${esc(t.name)}</span><span class="num">${t.n}</span><div class="bar"><i style="width:${t.n/topMax*100}%;background:var(--x15)"></i></div></li>`).join('')
     :'<li class="muted">No diagnoses logged this month yet.</li>';
 
+  // case types
+  {const tc={};let tagged=0;C.forEach(e=>{const t=tagsOf(e);if(t.length)tagged++;t.forEach(x=>{tc[x]=(tc[x]||0)+1})});
+   const tt=Object.entries(tc).sort((a,b)=>b[1]-a[1]).slice(0,10),tm=tt[0]?tt[0][1]:1;
+   $('ctTop').innerHTML=tt.length?tt.map(([k,n])=>`<li><span>${esc(tagLabel(k))} <span class="ttag">${k.slice(0,3)}</span></span><span class="num">${n}</span><div class="bar"><i style="width:${n/tm*100}%;background:${k.startsWith('MCH')?'var(--c2)':'var(--c1)'}"></i></div></li>`).join('')+(raw>tagged?`<li class="muted small">${raw-tagged} of ${raw} case${raw===1?'':'s'} have no case type.</li>`:'')
+     :'<li class="muted">No case types picked this month yet. They are optional.</li>';}
+
   // management breakdown
   const ncMins=NONC.map(t=>N.filter(e=>e.type===t.id).reduce((a,e)=>a+e.mins,0));
   const maxM=Math.max(1,...ncMins);
@@ -1085,11 +1135,11 @@ function renderTable(C,N){
   const trc=e=>editing&&editing.id===e.id?' class="editing"':'';
   if(reg==='clin'){
     $('thead').innerHTML='<tr><th>Date</th><th>Activity</th><th>Patient ID</th><th>Diagnoses</th><th>Complexity</th><th class="n">Weight</th><th class="n">Time</th><th>Notes</th><th></th></tr>';
-    const rows=C.filter(e=>!q||[e.ic4,dxStr(e),e.note,byId(CLIN,e.type)?.name].join(' ').toLowerCase().includes(q)).sort((a,b)=>b.date.localeCompare(a.date));
+    const rows=C.filter(e=>!q||[e.ic4,dxStr(e),tagStr(e),e.note,byId(CLIN,e.type)?.name].join(' ').toLowerCase().includes(q)).sort((a,b)=>b.date.localeCompare(a.date));
     $('entryCount').textContent=`${rows.length} case${rows.length===1?'':'s'}`;
     $('rows').innerHTML=rows.length?rows.map(e=>{const t=byId(CLIN,e.type)||CLIN[0],x=CX.find(c=>c.v===e.cx)||CX[0];
       return `<tr${trc(e)}><td class="num" data-label="Date">${dstr(e.date)}</td><td data-label="Activity"><span class="cat"><span class="sw" style="background:${t.color}"></span>${t.name}</span></td>
-      <td class="num" data-label="Patient ID">${e.ic4?esc(e.ic4):'<span class="muted">—</span>'}</td><td data-label="Diagnoses">${dxs(e).map(esc).join('<br>')}</td><td data-label="Complexity"><span class="cat"><span class="sw" style="background:${x.color}"></span>${x.name}${e.calc?`<span class="scoretag" title="Calculator: clinical ${e.calc.t}, coordination ${e.calc.p}, risk ${e.calc.r}">${e.calc.score.toFixed(1)}</span>`:''}</span></td>
+      <td class="num" data-label="Patient ID">${e.ic4?esc(e.ic4):'<span class="muted">—</span>'}</td><td data-label="Diagnoses">${dxs(e).map(esc).join('<br>')}${tagsOf(e).length?`<div>${tagsOf(e).map(t=>`<span class="ttag">${esc(t.replace(': ',' · '))}</span>`).join('')}</div>`:''}</td><td data-label="Complexity"><span class="cat"><span class="sw" style="background:${x.color}"></span>${x.name}${e.calc?`<span class="scoretag" title="Calculator: clinical ${e.calc.t}, coordination ${e.calc.p}, risk ${e.calc.r}">${e.calc.score.toFixed(1)}</span>`:''}</span></td>
       <td class="n" data-label="Weight">×${x.v}</td><td class="n" data-label="Time">${+e.mins>0?e.mins+' min':'<span class="muted">—</span>'}</td><td class="note" data-label="Notes">${esc(e.note)}${ex(e)}</td><td class="act" style="text-align:right">${del(e.id)}</td></tr>`}).join('')
       :`<tr><td colspan="9" class="empty">${q?'No cases match your search.':`No clinical cases for ${MONTHS[vm]}. Use “Log work” to add the first one.`}</td></tr>`;
   } else {
@@ -1138,6 +1188,12 @@ function renderDxManage(){
   $('sDxList').innerHTML=list.length?list.map(x=>`<span class="dxchip"><span>${esc(x.d)}</span><button type="button" data-dellist="${x.i}" aria-label="Remove ${esc(x.d)} from list">×</button></span>`).join(''):'<span class="muted small">No diagnoses match.</span>';
   $('sDxCount').textContent=`${state.dxList.length} diagnos${state.dxList.length===1?'is':'es'} in your list`;
 }
+$('ctBox').addEventListener('change',e=>{const v=e.target.value;if(e.target.checked){if(!pendingCt.includes(v))pendingCt.push(v)}else pendingCt=pendingCt.filter(x=>x!==v)});
+function addCt(){const n=$('ctNew').value.replace(/[;:\u0000-\u001F]/g,' ').trim().slice(0,40);if(!n)return;const g=$('ctNewG').value;
+  const L=ctAll(),hit=L[g].find(x=>x.toLowerCase()===n.toLowerCase()),v=g+': '+(hit||n);
+  if(!hit){state.ctList=(state.ctList||[]).concat(v);save()} if(!pendingCt.includes(v))pendingCt.push(v); $('ctNew').value=''; renderCt()}
+$('ctAddBtn').onclick=addCt;
+$('ctNew').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addCt()}});
 $('dxAddBtn').onclick=()=>{addPending($('cDx').value);$('cDx').focus()};
 $('cDx').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addPending($('cDx').value)} else if(e.key==='Backspace'&&!$('cDx').value&&pendingDx.length){pendingDx.pop();renderChips()}});
 // picking from the suggestion list adds the chip straight away
@@ -1238,17 +1294,17 @@ $('clinForm').addEventListener('submit',ev=>{
   $('cErr').textContent='';
   const sc=calcScore(calc);
   const cmin=parseInt($('cMin').value,10);
-  const rec={date,type,ic4:ic4||'',dx:pendingDx.slice(),cx,mins:cmin>0?cmin:undefined,note:$('cNote').value.trim()};
+  const rec={date,type,ic4:ic4||'',dx:pendingDx.slice(),cx,mins:cmin>0?cmin:undefined,note:$('cNote').value.trim(),tags:pendingCt.length?pendingCt.slice():undefined};
   if(sc!==null&&tierOf(sc)===cx) rec.calc={t:calc.t,p:calc.p,r:calc.r,score:sc}; else rec.calc=undefined;
   const wasEdit=editing&&editing.kind==='clin'&&state.clinical.find(e=>e.id===editing.id);
   if(wasEdit) Object.assign(wasEdit,rec); else state.clinical.push({id:uid(),...rec});
   const added=pendingDx.filter(d=>addToList(d));
   if(wasEdit) endEdit();
   save(); goToDate(date); if(reg!=='clin') reg='clin',$('regClin').setAttribute('aria-pressed',true),$('regNon').setAttribute('aria-pressed',false);
-  const nd=pendingDx.length; pendingDx=[]; renderChips();
+  const nd=pendingDx.length, nt=pendingCt.length; pendingDx=[]; renderChips(); pendingCt=[];
   render();
   $('cIC').value='';$('cDx').value='';$('cNote').value='';$('cMin').value='';$('cx1').checked=true;resetCalc(false);
-  toast('cToast',`${wasEdit?'Updated':'Saved'}: ${byId(CLIN,type).name}${ic4?` · ${ic4}`:''} · ${nd} diagnos${nd===1?'is':'es'} · ×${cx}${rec.calc?` (score ${rec.calc.score.toFixed(1)})`:''}.${added.length?` Added ${added.length} new diagnos${added.length===1?'is':'es'} to your list.`:''}`);
+  toast('cToast',`${wasEdit?'Updated':'Saved'}: ${byId(CLIN,type).name}${ic4?` · ${ic4}`:''} · ${nd} diagnos${nd===1?'is':'es'} · ×${cx}${rec.calc?` (score ${rec.calc.score.toFixed(1)})`:''}${nt?` · ${nt} case type${nt===1?'':'s'}`:''}.${added.length?` Added ${added.length} new diagnos${added.length===1?'is':'es'} to your list.`:''}`);
   $('cIC').focus();
 });
 
@@ -1301,7 +1357,7 @@ function startEdit(id){
   if(c){
     editing={kind:'clin',id}; setTab('clin');
     $('cDate').value=c.date; $('cType').value=c.type; $('cIC').value=c.ic4||'';
-    pendingDx=dxs(c).slice(); $('cDx').value=''; renderChips();
+    pendingDx=dxs(c).slice(); $('cDx').value=''; renderChips(); pendingCt=tagsOf(c).slice(); renderCt();
     const r=document.querySelector(`input[name="cx"][value="${c.cx}"]`); if(r) r.checked=true;
     if(c.calc){calc={t:c.calc.t,p:c.calc.p,r:c.calc.r};renderCalc();$('calc').open=true}else resetCalc(false);
     $('cNote').value=c.note||''; $('cMin').value=+c.mins>0?c.mins:''; $('cErr').textContent='';
@@ -1320,7 +1376,7 @@ function endEdit(){
   $('cEdit').hidden=true; $('nEdit').hidden=true; $('cSubmit').textContent='Save case'; $('nSubmit').textContent='Save activity';
   return k;
 }
-function clearClin(){resetCalc(false);$('cMin').value='';$('cIC').value='';$('cDx').value='';$('cNote').value='';$('cx1').checked=true;$('cErr').textContent='';pendingDx=[];renderChips();$('cDate').value=todayStr}
+function clearClin(){resetCalc(false);$('cMin').value='';$('cIC').value='';$('cDx').value='';$('cNote').value='';$('cx1').checked=true;$('cErr').textContent='';pendingDx=[];renderChips();pendingCt=[];renderCt();$('cDate').value=todayStr}
 function clearNon(){$('nDetails').value='';$('nNote').value='';$('nOther').value='';$('nErr').textContent='';$('nH').value=1;$('nM').value=0;$('nDate').value=todayStr}
 $('cCancel').onclick=()=>{endEdit();clearClin();render()};
 $('nCancel').onclick=()=>{endEdit();clearNon();render()};
@@ -1359,7 +1415,7 @@ async function copyText(t,okMsg){
 }
 const q=s=>'"'+String(s??'').replace(/"/g,'""')+'"';
 $('copyJson').onclick=()=>copyText(JSON.stringify(state),'Backup copied. Keep it somewhere safe, such as a private note.');
-$('copyCsvC').onclick=()=>{const L=['date,activity,patient_id,diagnosis,complexity,multiplier,note,calc_score,calc_clinical,calc_coordination,calc_risk,minutes'].concat(state.clinical.slice().sort((a,b)=>a.date.localeCompare(b.date)).map(e=>[e.date,q(byId(CLIN,e.type)?.name),q(e.ic4),q(dxStr(e)),q((CX.find(c=>c.v===e.cx)||{}).name),e.cx,q(e.note),e.calc?e.calc.score:'',e.calc?e.calc.t:'',e.calc?e.calc.p:'',e.calc?e.calc.r:'',+e.mins>0?e.mins:''].join(',')));copyText(L.join('\n'),'Clinical CSV copied. Paste into Google Sheets or Excel.')};
+$('copyCsvC').onclick=()=>{const L=['date,activity,patient_id,diagnosis,complexity,multiplier,note,calc_score,calc_clinical,calc_coordination,calc_risk,minutes,case_types'].concat(state.clinical.slice().sort((a,b)=>a.date.localeCompare(b.date)).map(e=>[e.date,q(byId(CLIN,e.type)?.name),q(e.ic4),q(dxStr(e)),q((CX.find(c=>c.v===e.cx)||{}).name),e.cx,q(e.note),e.calc?e.calc.score:'',e.calc?e.calc.t:'',e.calc?e.calc.p:'',e.calc?e.calc.r:'',+e.mins>0?e.mins:'',q(tagStr(e))].join(',')));copyText(L.join('\n'),'Clinical CSV copied. Paste into Google Sheets or Excel.')};
 $('copyCsvN').onclick=()=>{const L=['date,activity,specify,details,minutes,note'].concat(state.nonclinical.slice().sort((a,b)=>a.date.localeCompare(b.date)).map(e=>[e.date,q(byId(NONC,e.type)?.name),q(e.other),q(e.details),e.mins,q(e.note)].join(',')));copyText(L.join('\n'),'Admin / others CSV copied. Paste into Google Sheets or Excel.')};
 function restore(text){
   try{const o=JSON.parse(text);if(!valid(o))throw 0;state=normalize(o);pendingDx=[];renderChips();save();showView();msg(`Restored ${o.clinical.length} cases and ${o.nonclinical.length} activities.`)}
@@ -1589,9 +1645,9 @@ function buildWorkbook(scope){
   const L=n=>XL.col(n);
   const CROWS=Math.max(C.length+300,500), NROWS=Math.max(N.length+200,300);
   const DMIN=serialYMD(2015,1,1), DMAX=serialYMD(2040,12,31);
-  const S1=wb.sheet(CL,{freeze:2,cols:anon?[14,20,46,20,11,12,10,13,8,11]:[14,20,16,46,20,11,36,12,10,13,8,11],
-    colStyles:anon?[XS.dDate,XS.dTop,XS.dWrap,XS.dTop,null,null,XS.dInt,XS.dInt,XS.dInt,XS.dInt]:[XS.dDate,XS.dTop,XS.dTop,XS.dWrap,XS.dTop,null,XS.dWrap,null,XS.dInt,XS.dInt,XS.dInt,XS.dInt]});
-  const h1=(anon?['Date','Activity','Diagnoses','Complexity','Multiplier']:['Date','Activity','Patient identifier','Diagnoses','Complexity','Multiplier','Notes']).concat(['Calculator score','Clinical (1–5)','Coordination (1–5)','Risk (1–5)','Time (min)']);
+  const S1=wb.sheet(CL,{freeze:2,cols:anon?[14,20,46,20,11,12,10,13,8,11,30]:[14,20,16,46,20,11,36,12,10,13,8,11,30],
+    colStyles:anon?[XS.dDate,XS.dTop,XS.dWrap,XS.dTop,null,null,XS.dInt,XS.dInt,XS.dInt,XS.dInt,XS.dWrap]:[XS.dDate,XS.dTop,XS.dTop,XS.dWrap,XS.dTop,null,XS.dWrap,null,XS.dInt,XS.dInt,XS.dInt,XS.dInt,XS.dWrap]});
+  const h1=(anon?['Date','Activity','Diagnoses','Complexity','Multiplier']:['Date','Activity','Patient identifier','Diagnoses','Complexity','Multiplier','Notes']).concat(['Calculator score','Clinical (1–5)','Coordination (1–5)','Risk (1–5)','Time (min)','Case types']);
   const c1=n=>h1.indexOf(n)+1;
   h1.forEach((h,i)=>S1.set(1,i+1,h,XS.dHead)); S1.height(1,30);
   const cCx=L(c1('Complexity')), cT=L(c1('Clinical (1–5)')), cR=L(c1('Risk (1–5)'));
@@ -1600,8 +1656,8 @@ function buildWorkbook(scope){
     if(e){
       const t=byId(CLIN,e.type),x=CX.find(c=>c.v===e.cx)||{},k=e.calc||{};
       const vals={'Date':serial(e.date),'Activity':t?t.name:e.type,'Patient identifier':String(e.ic4||''),'Diagnoses':dxStr(e),'Complexity':x.name||'','Notes':e.note||'',
-        'Clinical (1–5)':k.t||'','Coordination (1–5)':k.p||'','Risk (1–5)':k.r||'','Time (min)':+e.mins>0?+e.mins:''};
-      const sts={'Date':XS.dDate,'Diagnoses':XS.dWrap,'Notes':XS.dWrap,'Clinical (1–5)':XS.dInt,'Coordination (1–5)':XS.dInt,'Risk (1–5)':XS.dInt,'Time (min)':XS.dInt};
+        'Clinical (1–5)':k.t||'','Coordination (1–5)':k.p||'','Risk (1–5)':k.r||'','Time (min)':+e.mins>0?+e.mins:'','Case types':tagStr(e)};
+      const sts={'Date':XS.dDate,'Diagnoses':XS.dWrap,'Case types':XS.dWrap,'Notes':XS.dWrap,'Clinical (1–5)':XS.dInt,'Coordination (1–5)':XS.dInt,'Risk (1–5)':XS.dInt,'Time (min)':XS.dInt};
       h1.forEach((h,j)=>{if(h in vals)S1.set(row,j+1,vals[h],sts[h]||XS.dTop)});
     }
     const mul=e?e.cx:'', sc=e&&e.calc?e.calc.score:'';
@@ -1765,7 +1821,7 @@ function parseExport(sheets){
   const cs=sheets['Clinical'], ns=sheets['Admin & Others']||sheets['Management']||sheets['Non-clinical'];
   if(!cs&&!ns) throw new Error('nosheets');
   if(cs){
-    const m=colMap(cs[0],{date:['date'],act:['activity'],pid:['patient identifier','ic last 4','ic'],dx:['diagnos'],cxn:['complexity'],mul:['multiplier'],note:['notes'],score:['calculator score'],t:['clinical 1 5'],p:['coordination 1 5'],r:['risk 1 5'],mins:['time min']});
+    const m=colMap(cs[0],{date:['date'],act:['activity'],pid:['patient identifier','ic last 4','ic'],dx:['diagnos'],cxn:['complexity'],mul:['multiplier'],note:['notes'],score:['calculator score'],t:['clinical 1 5'],p:['coordination 1 5'],r:['risk 1 5'],mins:['time min'],ct:['case type']});
     res.anon=m.pid<0;
     cs.slice(1).forEach(row=>{
       if(!row||row.every(v=>v===null||v===''||v===undefined)) return;
@@ -1776,6 +1832,7 @@ function parseExport(sheets){
       const dx=String(g('dx')??'').split(/[;\n]/).map(s=>s.trim()).filter(Boolean);
       const e={date,type,ic4:g('pid')==null?'':String(g('pid')).trim(),dx,cx,note:g('note')==null?'':String(g('note'))};
       const mins=Math.round(+g('mins')); if(mins>0) e.mins=mins;
+      if(g('ct')!=null){const tg=parseTags(g('ct')); if(tg.length) e.tags=tg}
       const t=+g('t'),p=+g('p'),r=+g('r');
       if([t,p,r].every(v=>v>=1&&v<=5)){const sc=Math.round((t*.4+p*.3+r*.3)*10)/10; if(tierOf(sc)===cx) e.calc={t,p,r,score:sc}}
       res.clin.push(e);
@@ -1799,7 +1856,7 @@ function parseExport(sheets){
   return res;
 }
 // add only what isn't already here (identical entries are counted, so a file's own repeats are kept)
-const fullKeyC=e=>[e.date,e.type,(e.ic4||'').toLowerCase(),dxs(e).map(dxKey).sort().join(';'),e.cx,+e.mins||0,(e.note||'').trim()].join('|');
+const fullKeyC=e=>[e.date,e.type,(e.ic4||'').toLowerCase(),dxs(e).map(dxKey).sort().join(';'),e.cx,+e.mins||0,(e.note||'').trim(),tagsOf(e).slice().sort().join(';')].join('|');
 const fullKeyN=e=>[e.date,e.type,(e.other||'').toLowerCase(),String(e.details).trim().toLowerCase(),e.mins,(e.note||'').trim()].join('|');
 function mergeImported(res){
   const have=(arr,key)=>{const m=new Map();arr.forEach(e=>{const k=key(e);m.set(k,(m.get(k)||0)+1)});return m};
@@ -1900,7 +1957,7 @@ function fnv(s){let h=0x811c9dc5;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);
 function reconcileId(){}
 function wire(e,kind){
   return kind==='clin'
-    ?{kind,id:e.id,date:e.date,type:e.type,dx:dxs(e),cx:e.cx,mins:+e.mins>0?+e.mins:null,calc:e.calc?{t:e.calc.t,p:e.calc.p,r:e.calc.r,score:e.calc.score}:null}
+    ?{kind,id:e.id,date:e.date,type:e.type,dx:dxs(e),cx:e.cx,mins:+e.mins>0?+e.mins:null,calc:e.calc?{t:e.calc.t,p:e.calc.p,r:e.calc.r,score:e.calc.score}:null,...(tagsOf(e).length?{tags:tagsOf(e)}:{})}
     :{kind,id:e.id,date:e.date,type:e.type,other:e.type==='oth'?(e.other||''):'',details:e.details||'',mins:e.mins};
 }
 function whoKey(p){return '|'+p.name+'|'+p.kk+'|'+(p.fmsId||'')}
@@ -2082,7 +2139,7 @@ function applyLogin(j,prev){
   let got=0; const E=j.entries||{};
   (E.clinical||[]).forEach(e=>{ if(!e||!e.id||!e.date) return;
     if(!have.has(e.id)){ const rec={id:e.id,date:e.date,type:e.type,ic4:'',dx:Array.isArray(e.dx)?e.dx:[],cx:+e.cx||1,note:''};
-      if(+e.mins>0) rec.mins=+e.mins; if(e.calc) rec.calc=e.calc;
+      if(+e.mins>0) rec.mins=+e.mins; if(e.calc) rec.calc=e.calc; if(Array.isArray(e.tags)&&e.tags.length) rec.tags=e.tags.filter(t=>/^(OPD|MCH): ./.test(t));
       state.clinical.push(rec); rec.dx.forEach(d=>addToList(d)); got++;
       s.sent[e.id]={h:fnv(JSON.stringify(wire(rec,'clin'))+who),d:f.district,k:'clin'}; } });
   (E.management||[]).forEach(e=>{ if(!e||!e.id||!e.date) return;
