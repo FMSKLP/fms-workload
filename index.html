@@ -1,0 +1,2174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#23308A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="FMS Workload">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<style>
+html{-webkit-text-size-adjust:100%;color-scheme:light}
+@media (prefers-color-scheme: dark){html{color-scheme:dark}}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+.offbadge{display:inline-flex;align-items:center;gap:6px;font-size:.75rem;font-weight:600;color:var(--ok);border:1px solid currentColor;border-radius:999px;padding:1px 9px;margin-left:8px;vertical-align:middle}
+.offbadge::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+</style>
+<title>FMS Workload</title>
+<style>
+/* Layout: clinic register — identity bar, month summary (raw vs weighted), clinical and management breakdowns, logging forms, daily chart, then the entry registers. */
+:root{
+  --bg:#F5F6FB; --surface:#FFFFFF; --sunk:#ECEEF6; --ink:#121735; --muted:#575D7E; --line:#DADDEB;
+  --accent:#23308A; --accent-ink:#FFFFFF; --accent-soft:#E5E8F6;
+  --gold:#F2C200; --gold-ink:#7A5E00; --gold-soft:#FFF6D6; --red:#C8102E; --red-soft:#FBE6EA;
+  --flag-y:#F7C600; --flag-b:#1D2B8F; --flag-r:#D0102C;
+  --ok:#2E7D4F; --warn:#A86A12; --crit:#C8102E;
+  --c1:#23308A; --c2:#C8102E; --c3:#D4A106; --c4:#5C6FD1; --c5:#E26A7E; --c6:#8A6D00; --c7:#0F1A4F; --c8:#9AA6E8;
+  --x1:#9AA6E8; --x15:#E2B21A; --x2:#C8102E;
+  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body:"Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0C0F22; --surface:#151935; --sunk:#10142B; --ink:#E8EAF6; --muted:#9DA3C6; --line:#2A3056;
+  --accent:#8C9CF0; --accent-ink:#0C0F22; --accent-soft:#222A5C;
+  --gold:#F2C94C; --gold-ink:#F2C94C; --gold-soft:#36301A; --red:#F0677D; --red-soft:#3A1A24;
+  --flag-y:#F7C600; --flag-b:#3A4BC4; --flag-r:#E0243F;
+  --ok:#5DBB85; --warn:#E0A948; --crit:#F0677D;
+  --c1:#8C9CF0; --c2:#F0677D; --c3:#F2C94C; --c4:#B3BEF7; --c5:#F49AAA; --c6:#D8B54A; --c7:#D2D8FA; --c8:#6E7BC4;
+  --x1:#4A5699; --x15:#E2B93B; --x2:#F0677D;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0C0F22; --surface:#151935; --sunk:#10142B; --ink:#E8EAF6; --muted:#9DA3C6; --line:#2A3056;
+  --accent:#8C9CF0; --accent-ink:#0C0F22; --accent-soft:#222A5C;
+  --gold:#F2C94C; --gold-ink:#F2C94C; --gold-soft:#36301A; --red:#F0677D; --red-soft:#3A1A24;
+  --flag-y:#F7C600; --flag-b:#3A4BC4; --flag-r:#E0243F;
+  --ok:#5DBB85; --warn:#E0A948; --crit:#F0677D;
+  --c1:#8C9CF0; --c2:#F0677D; --c3:#F2C94C; --c4:#B3BEF7; --c5:#F49AAA; --c6:#D8B54A; --c7:#D2D8FA; --c8:#6E7BC4;
+  --x1:#4A5699; --x15:#E2B93B; --x2:#F0677D;
+  color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+.wrap{max-width:1140px;margin:0 auto;padding-block:24px 48px;padding-inline:16px;display:grid;gap:20px}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:1.9rem;font-weight:700}
+h2{font-size:1.1rem;font-weight:600}
+h3{font-size:.95rem;font-weight:600}
+p{margin:0}
+.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.label{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.muted{color:var(--muted)}
+.small{font-size:.85rem}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* setup */
+.setup{max-width:560px;margin:6vh auto 0;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:28px 26px;display:grid;gap:18px}
+.setup .kicker{font-family:var(--f-mono);font-size:.78rem;color:var(--accent);letter-spacing:.06em}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:.92rem}
+.check input{margin-top:4px}
+
+header.top{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:end;justify-content:space-between}
+.who{color:var(--muted);margin-top:2px}
+.who strong{color:var(--ink);font-weight:600}
+.whorow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:2px}
+.whorow .who{margin-top:0}
+.whoform{display:grid;grid-template-columns:repeat(2,minmax(0,220px));gap:10px;margin-top:8px;align-items:end}
+.whoform .btnrow{grid-column:1 / -1}
+@media (max-width:520px){.whoform{grid-template-columns:1fr}}
+.monthnav{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.monthnav .m{min-width:9.5em;text-align:center;font-family:var(--f-display);font-weight:600;font-size:1.05rem}
+.iconbtn{width:36px;height:36px;border-radius:8px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;font-size:1.1rem}
+.iconbtn:hover,.btn:hover{border-color:var(--accent)}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 14px;font-weight:600}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.sm{padding:4px 10px;font-size:.85rem}
+.btn.danger{color:var(--crit)}
+.btn.danger.arm{background:var(--crit);color:var(--surface);border-color:var(--crit)}
+
+.banner{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;background:var(--accent-soft);border-radius:var(--r);padding:10px 14px}
+.savestate{font-size:.85rem;color:var(--muted);display:flex;align-items:center;gap:6px}
+.savestate .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);flex:none}
+.savestate.bad{color:var(--crit)} .savestate.bad .dot{background:var(--crit)}
+.savestate.wait{color:var(--warn)} .savestate.wait .dot{background:var(--warn)}
+.savestate.off{display:none}
+.linkbar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;border:1px solid var(--accent);border-left-width:4px;border-radius:var(--r);padding:10px 14px;background:var(--surface);font-size:.92rem}
+.linkbar select,.field select{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;max-width:100%}
+.linkbar{min-width:0}.linkbar>span:first-child{flex:1 1 100%}.linkbar select{min-width:0;width:100%;flex:1 1 180px}.field select{min-width:0;width:100%}
+
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:grid;gap:4px;align-content:start}
+.tile.lead{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.tile .big{font-family:var(--f-display);font-size:2rem;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+.tile .big small{font-size:1rem;color:var(--muted);font-weight:600}
+.tile .foot{font-size:.85rem;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.chip{font-size:.75rem;font-weight:600;padding:1px 9px;border-radius:999px;border:1px solid currentColor;white-space:nowrap}
+.chip.ok{color:var(--ok)} .chip.warn{color:var(--warn)} .chip.crit{color:var(--crit)} .chip.na{color:var(--muted)}
+
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:860px){.cols{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;display:grid;gap:14px;min-width:0}
+.panel-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.sep{border-top:1px solid var(--line);margin:2px 0}
+
+.brows{display:grid;gap:12px}
+.brow{display:grid;gap:5px}
+.brow .l1{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.brow .nm{display:flex;align-items:center;gap:8px;font-weight:600;min-width:0}
+.brow .vals{font-family:var(--f-mono);font-size:.85rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.sw{width:10px;height:10px;border-radius:3px;flex:none;display:inline-block}
+.bar{height:8px;background:var(--sunk);border-radius:6px;position:relative;overflow:hidden}
+.bar i{position:absolute;inset:0 auto 0 0;border-radius:6px}
+.bar i.raw{opacity:.45}
+.mix{display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--sunk)}
+.mix span{height:100%}
+.mixleg{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:.85rem;color:var(--muted)}
+.mixleg span{display:flex;gap:6px;align-items:center}
+
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;padding:3px;background:var(--sunk);gap:2px;flex-wrap:wrap}
+.seg button{border:0;background:transparent;border-radius:7px;padding:5px 12px;font-weight:600;color:var(--muted);font-size:.9rem}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+
+form.log{display:grid;gap:12px}
+.field{display:grid;gap:4px;min-width:0}
+.field>label,.field>.flabel{font-size:.85rem;font-weight:600}
+.field .req{color:var(--crit)}
+.field input,.field select,.field textarea{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
+.field textarea{min-height:64px;resize:vertical}
+.hint{font-size:.8rem;color:var(--muted)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+@media (max-width:420px){.row2{grid-template-columns:1fr}}
+.cx{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.cx label{border:1px solid var(--line);border-radius:8px;padding:8px 10px;display:grid;gap:2px;cursor:pointer;background:var(--bg)}
+.cx label:has(input:checked){border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);background:var(--accent-soft)}
+.cx input{position:absolute;opacity:0;width:1px;height:1px}
+.cx label:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+.cx .t{font-weight:600;font-size:.88rem;line-height:1.25}
+.cx .mult{font-family:var(--f-mono);font-size:.8rem;color:var(--muted)}
+@media (max-width:420px){.cx{grid-template-columns:1fr}}
+.dur{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.durwrap{position:relative}
+.durwrap span{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.85rem;pointer-events:none}
+.quick{display:flex;flex-wrap:wrap;gap:6px}
+.err{font-size:.85rem;color:var(--crit);min-height:0}
+.toast{font-size:.85rem;color:var(--ok);min-height:1.3em}
+
+.chartbox{overflow-x:auto}
+.chartbox svg{display:block;width:100%;height:auto}
+.chart text{fill:var(--muted);font-family:var(--f-mono);font-size:11px}
+.chart .grid{stroke:var(--line);stroke-width:1}
+.chart .today{fill:var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.85rem;color:var(--muted)}
+.legend span{display:flex;align-items:center;gap:6px}
+
+.tabletools{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.tabletools input{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 10px;min-width:0;width:240px;max-width:100%}
+.tablebox{overflow:auto;max-height:560px;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;min-width:720px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+thead th{position:sticky;top:0;background:var(--surface);z-index:1;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+td.n,th.n{text-align:right}
+td.n{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+td .cat{display:flex;align-items:center;gap:8px}
+td.note{color:var(--muted);max-width:260px}
+.empty{padding:22px;text-align:center;color:var(--muted)}
+.cxchip{font-family:var(--f-mono);font-size:.78rem;padding:1px 8px;border-radius:999px;white-space:nowrap;border:1px solid var(--line)}
+
+details.settings{background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+details.settings>summary{padding:14px 18px;cursor:pointer;font-family:var(--f-display);font-weight:600;font-size:1.05rem;list-style:none;display:flex;justify-content:space-between;align-items:center}
+details.settings>summary::-webkit-details-marker{display:none}
+details.settings>summary::after{content:"+";font-family:var(--f-mono);color:var(--muted)}
+details.settings[open]>summary::after{content:"−"}
+.sbody{padding:0 18px 18px;display:grid;gap:22px}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.backup{display:grid;gap:10px}
+.backup textarea{width:100%;min-height:110px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-family:var(--f-mono);font-size:.8rem}
+.btnrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.filelbl{display:inline-flex;position:relative}
+.filelbl input{position:absolute;opacity:0;width:1px;height:1px}
+@media (prefers-reduced-motion:no-preference){.bar i{transition:width .4s ease}}
+.exportbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.xmsg{font-size:.85rem;min-height:1.2em}
+.manualcopy{width:100%;min-height:90px;font-family:var(--f-mono);font-size:.75rem;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;color:var(--ink)}
+.supaste>summary{cursor:pointer;font-size:.88rem;font-weight:600;color:var(--accent)}
+/* flag colours: yellow, royal blue, red on white */
+.flagbar{height:9px;border-radius:5px;background:linear-gradient(to bottom,var(--flag-y) 0 33.4%,var(--flag-b) 33.4% 66.7%,var(--flag-r) 66.7% 100%)}
+.setup .flagbar{margin:-28px -26px 0;border-radius:14px 14px 0 0}
+h1{color:var(--accent)}
+.logcol>.panel{border-color:var(--line);box-shadow:0 1px 2px rgba(18,23,53,.05),0 6px 18px rgba(18,23,53,.07);background:linear-gradient(to bottom,var(--flag-y) 0 3px,var(--flag-b) 3px 6px,var(--flag-r) 6px 9px,transparent 9px) top/100% 9px no-repeat,var(--surface);padding-top:24px;border-radius:14px}
+.dashcol .tiles .tile{border-top:4px solid var(--band,var(--accent))}
+.tiles .tile:nth-child(1){--band:var(--flag-b)}
+.tiles .tile:nth-child(2){--band:var(--gold)}
+.tiles .tile:nth-child(3){--band:var(--red)}
+.tiles .tile:nth-child(4){--band:var(--flag-b)}
+.tiles .tile:nth-child(5){--band:var(--gold)}
+.tiles .tile.lead{background:var(--gold-soft)}
+.tiles .tile.lead .big{color:var(--accent)}
+.ms{border-top:3px solid var(--band,var(--accent))}
+.mrow .ms:nth-child(1){--band:var(--flag-b)}.mrow .ms:nth-child(2){--band:var(--gold)}.mrow .ms:nth-child(3){--band:var(--red)}.mrow .ms:nth-child(4){--band:var(--flag-b)}.mrow .ms:nth-child(5){--band:var(--gold)}
+.ms.lead{background:var(--gold-soft)}
+.dtitle{border-left:5px solid var(--gold);padding-left:10px}
+.card .panel-head h2{position:relative}
+.btn.primary:hover{background:var(--flag-b);border-color:var(--gold)}
+.seg button[aria-pressed="true"]{box-shadow:inset 0 -2px 0 var(--gold),0 1px 2px rgba(0,0,0,.08)}
+.banner{border-left:4px solid var(--gold)}
+/* dashboard card grid */
+.dgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;align-items:stretch}
+.dgrid .span2{grid-column:span 2}
+.dgrid>.panel{align-content:start}
+.dgrid .donutwrap{align-content:start}
+#rows td.n,#rows td.num:first-child{white-space:nowrap}
+.card{box-shadow:0 1px 2px rgba(22,33,43,.05),0 6px 18px rgba(22,33,43,.06);border-color:transparent;border-radius:14px}
+.tiles .tile{box-shadow:0 1px 2px rgba(22,33,43,.05),0 6px 18px rgba(22,33,43,.06);border-color:transparent;border-radius:14px}
+.tiles .tile.lead{border-color:var(--accent)}
+.dashcol .tile .big{font-size:clamp(1.35rem,1.75vw,2rem);white-space:nowrap}
+.donutwrap{display:grid;gap:12px;justify-items:center;align-content:center;height:100%}
+.donut{width:min(180px,100%);aspect-ratio:1;max-width:100%}
+.donut .dnum{font-family:var(--f-display);font-size:22px;font-weight:700;fill:var(--ink)}
+.donut .dlab{font-size:10px;fill:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.donutwrap .mixleg{display:grid;gap:4px;justify-self:stretch}
+@media (max-width:1280px){.dgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:700px){.dgrid{grid-template-columns:1fr}.dgrid .span2{grid-column:auto}}
+/* app shell: Log work column (25%) + dashboard (75%); phones switch between the two */
+.wrap.app{max-width:1600px}
+.shell{display:grid;grid-template-columns:minmax(320px,25%) minmax(0,1fr);gap:20px;align-items:start}
+.logcol{position:sticky;top:calc(12px + env(safe-area-inset-top,0px));max-height:calc(100vh - 24px);overflow:auto;overscroll-behavior:contain;display:grid;gap:12px;border-radius:var(--r)}
+.logcol .row2{grid-template-columns:1fr}
+.logcol>.panel{border-color:var(--accent);box-shadow:inset 0 3px 0 var(--accent)}
+.dashcol{display:grid;gap:20px;min-width:0}
+.dashhead{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
+.dhl{display:flex;align-items:center;gap:10px}
+.dtitle{font-size:1.35rem}
+.mstats,.backlog{display:none}
+.mstats{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:8px 10px;gap:6px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.mrow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:3px}
+.ms{display:grid;gap:1px;text-align:center;padding:4px 2px;border-radius:7px;background:var(--sunk)}
+.ms.lead{background:var(--accent-soft)}
+.ms span{font-size:.64rem;color:var(--muted);font-weight:600;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ms b{font-family:var(--f-display);font-size:1.02rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.ms.lead b{color:var(--accent)}
+.mfoot{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.8rem;color:var(--muted)}
+@media (max-width:960px){
+  .shell{grid-template-columns:1fr}
+  .logcol{position:static;max-height:none;overflow:visible}
+  .app.view-log .dashcol{display:none}
+  .app.view-dash .logcol{display:none}
+  .mstats{display:grid;position:sticky;top:env(safe-area-inset-top,0px);z-index:4}
+  .backlog{display:inline-flex}
+  .app.view-dash .fab{display:flex}
+}
+.warnbar{display:grid;gap:8px;border:1px solid var(--warn);border-left-width:4px;border-radius:var(--r);padding:10px 14px;background:var(--surface);font-size:.9rem}
+.warnbar strong{color:var(--warn)}
+.exbar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between;border:1px dashed var(--line);border-radius:var(--r);padding:8px 14px;font-size:.9rem;color:var(--muted)}
+details.calc{border:1px dashed var(--line);border-radius:8px;margin-top:4px}
+details.calc[open]{border-style:solid;background:var(--bg)}
+details.calc>summary{cursor:pointer;padding:8px 10px;font-size:.88rem;font-weight:600;color:var(--accent);list-style:none}
+details.calc>summary::-webkit-details-marker{display:none}
+details.calc>summary::before{content:"+ "}
+details.calc[open]>summary::before{content:"− "}
+.calcbody{padding:0 10px 10px;display:grid;gap:12px}
+#calcDims{display:grid;gap:14px}
+.calcres .cat{gap:8px}
+.dim{display:grid;gap:5px}
+.dim .dh{display:flex;justify-content:space-between;gap:8px;align-items:baseline;font-size:.88rem}
+.dim .dh b{font-weight:600}
+.dim .dh span{font-family:var(--f-mono);font-size:.75rem;color:var(--muted)}
+.lv{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.lv button{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:6px 0;font-family:var(--f-mono);font-weight:600;font-size:.9rem;color:var(--muted)}
+.lv button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.lv button:hover{border-color:var(--accent)}
+.dim .desc{font-size:.82rem;color:var(--muted);min-height:1.2em}
+.dim .desc strong{color:var(--ink);font-weight:600}
+.calcres{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;padding:8px 10px;border-radius:8px;background:var(--sunk);font-size:.9rem}
+.calcres .sc{font-family:var(--f-mono);font-weight:600;font-size:1.05rem}
+.scoretag{font-family:var(--f-mono);font-size:.75rem;color:var(--muted);margin-left:4px}
+.collhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;width:100%;border:0;background:transparent;padding:0;text-align:left;cursor:pointer;color:inherit}
+.collhead h2{flex:1;min-width:0}
+.collhead:hover h2{color:var(--accent)}
+.chev{width:26px;height:26px;border-radius:7px;border:1px solid var(--line);display:grid;place-items:center;flex:none}
+.chev::before{content:"";width:7px;height:7px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:translateY(-2px) rotate(45deg)}
+.collhead[aria-expanded="false"] .chev::before{transform:translateX(-2px) rotate(-45deg)}
+@media (prefers-reduced-motion:no-preference){.chev::before{transition:transform .2s ease}}
+.entbody{display:grid;gap:14px;min-width:0}
+.editbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;background:var(--accent-soft);border:1px solid var(--accent);border-radius:8px;padding:8px 10px;font-size:.9rem;font-weight:600}
+tr.editing td{background:var(--accent-soft)}
+td.act .acts{display:inline-flex;gap:6px}
+.dxbox{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px;display:grid;gap:6px}
+.dxbox:focus-within{border-color:var(--accent)}
+.dxchips{display:flex;flex-wrap:wrap;gap:6px}
+.dxchips:empty{display:none}
+.dxchip{display:inline-flex;align-items:center;gap:4px;background:var(--accent-soft);color:var(--ink);border-radius:999px;padding:3px 4px 3px 11px;font-size:.88rem;font-weight:600;max-width:100%}
+.dxchip span{overflow-wrap:anywhere}
+.dxchip button{border:0;background:transparent;color:var(--muted);width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:1rem;line-height:1;flex:none}
+.dxchip button:hover{background:var(--surface);color:var(--crit)}
+.dxadd{display:flex;gap:6px}
+.dxadd input{flex:1;min-width:0;border:0;background:transparent;padding:6px 4px}
+.dxadd input:focus{outline:none}
+.dxquick{display:flex;flex-wrap:wrap;gap:6px}
+.dxquick:empty{display:none}
+.qchip{border:1px dashed var(--line);background:transparent;border-radius:999px;padding:3px 10px;font-size:.82rem;color:var(--muted)}
+.qchip:hover{border-color:var(--accent);color:var(--ink)}
+.dxmanage{display:flex;flex-wrap:wrap;gap:6px;max-height:260px;overflow:auto;padding:2px}
+.dxmanage .dxchip{background:var(--sunk)}
+.dxtop{display:grid;gap:6px;margin:0;padding:0;list-style:none}
+.dxtop li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:baseline;font-size:.9rem}
+.dxtop li .bar{grid-column:1 / -1;height:5px}
+.fab{display:none;position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom, 0px));z-index:5;background:var(--accent);color:var(--accent-ink);border:0;border-radius:999px;padding:13px 20px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.25);align-items:center;gap:6px}
+@media (max-width:640px){
+  h1{font-size:1.6rem}
+  .wrap{padding-block:16px 96px}
+  .field input,.field select,.field textarea,.tabletools input{font-size:16px}
+  .btn.sm{padding:7px 12px}
+  .tiles{grid-template-columns:1fr 1fr;gap:10px}
+  .tiles .tile:last-child{grid-column:span 2}
+  .tile{padding:12px}
+  .tile .big{font-size:1.55rem}
+  .panel{padding:14px}
+  .monthnav{width:100%;justify-content:space-between}
+  .monthnav .m{min-width:0;flex:1}
+  .tabletools input{width:100%}
+  .tablebox{max-height:none;border:0;overflow:visible}
+  table{min-width:0}
+  thead{display:none}
+  table,tbody,tr,td{display:block;width:100%}
+  tr{border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin-bottom:10px}
+  td{border:0;padding:3px 0;display:flex;gap:12px;justify-content:space-between;align-items:baseline;text-align:right}
+  td::before{content:attr(data-label);font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;text-align:left;flex:none}
+  td.note{max-width:none}
+  td.act{justify-content:flex-end;padding-top:6px}
+  td.act::before,td.empty::before{content:none}
+  td.empty{display:block;text-align:center}
+}
+</style>
+</head>
+<body>
+
+
+<!-- First-run personalisation -->
+<div class="wrap" id="setupView" hidden>
+  <form class="setup" id="setupForm">
+    <div class="flagbar" aria-hidden="true"></div>
+    <div class="kicker" id="suKicker">FIRST-TIME SETUP</div>
+    <div style="display:grid;gap:6px">
+      <h1 id="suTitle">FMS Workload</h1>
+      <p class="muted" id="suIntro">Log clinical cases with complexity weighting and management work by time.</p>
+    </div>
+    <div class="field"><label for="suDist">District <span class="req">*</span></label><select id="suDist" required></select></div>
+    <div class="field"><label for="suKKSel">Klinik Kesihatan <span class="req">*</span></label><select id="suKKSel" required disabled></select></div>
+    <div class="field"><label for="suPick">Your name <span class="req">*</span></label><select id="suPick" required disabled></select>
+      <span class="hint" id="suPickHint">From the JKWPKL&amp;P FMS list.</span></div>
+    <div class="field" id="suNameWrap" hidden><label for="suName">Name of FMS <span class="req">*</span></label><input id="suName" placeholder="e.g. Dr Ahmad bin Ali" autocomplete="name">
+      <span class="hint">Names not on the list stay on this device only and can't sign in. Ask the state FMS to add you to the roster.</span></div>
+    <div id="suPwWrap" hidden style="display:grid;gap:12px">
+      <div class="field"><label for="suPw" id="suPwLbl">Password <span class="req">*</span></label>
+        <input type="password" id="suPw" autocomplete="current-password" minlength="6">
+        <span class="hint" id="suPwHint">Your own password. It lets you sign in again and get your log back if this page resets or you change phones.</span></div>
+      <div class="field" id="suPw2Wrap" hidden><label for="suPw2">Type the new password again <span class="req">*</span></label><input type="password" id="suPw2" autocomplete="new-password"></div>
+      <label class="check small" for="suShowPw"><input type="checkbox" id="suShowPw"><span>Show password</span></label>
+    </div>
+    <p class="hint" id="suNoSync" hidden>Signing in with a password and getting your log back works on the website version of this page (ask the state FMS for the link). Here, entries are kept on this device.</p>
+    <div class="err" id="suErr" aria-live="polite"></div>
+    <div class="btnrow"><button class="btn primary" type="submit" id="suGo">Start my workload log</button><button class="btn" type="button" id="suCancel" hidden>Cancel</button></div>
+    <p class="hint" id="suExHint">You start with an empty log. To see how the dashboard looks, you can load example entries from the top of the page and clear them in one tap.</p>
+    <details class="supaste" id="suLinkBox"><summary>State sheet link</summary>
+      <div style="display:grid;gap:6px;margin-top:8px">
+        <input id="suUrl" class="manualcopy" style="min-height:0" placeholder="https://script.google.com/macros/s/…/exec" inputmode="url" autocomplete="off" spellcheck="false" aria-label="State sheet link">
+        <span class="hint">Only needed if the state FMS gave you a link to paste. Usually it is built in.</span>
+      </div>
+    </details>
+    <div class="sep"></div>
+    <div style="display:grid;gap:8px">
+      <p class="small"><strong>Used this before?</strong> Restore your backup file, or an Excel file exported from this page, to bring back your entries.</p>
+      <div><label class="btn sm filelbl" for="suRestore">Restore from backup or Excel file…<input type="file" id="suRestore" accept=".json,.txt,.xlsx,.xlsm,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel.sheet.macroEnabled.12"></label></div>
+      <details class="supaste"><summary>Or paste a copied backup</summary>
+        <div style="display:grid;gap:8px;margin-top:8px">
+          <textarea id="suPaste" class="manualcopy" placeholder="Paste the backup text here" aria-label="Paste backup text"></textarea>
+          <div><button type="button" class="btn sm" id="suPasteBtn">Restore pasted backup</button></div>
+        </div>
+      </details>
+      <div class="err" id="suMsg" aria-live="polite"></div>
+    </div>
+  </form>
+</div>
+
+<div class="wrap app view-log" id="appView" hidden>
+  <div class="flagbar" aria-hidden="true"></div>
+  <header class="top">
+    <div>
+      <h1>FMS Workload</h1>
+      <div class="whorow" id="whoRow">
+        <div class="who" id="who"></div>
+        <button type="button" class="btn sm" id="whoEdit" aria-label="Edit name and Klinik Kesihatan">Edit</button>
+      </div>
+      <form class="whoform" id="whoForm" hidden novalidate>
+        <div class="field"><label for="wName">Name of FMS</label><input id="wName" autocomplete="name"></div>
+        <div class="field"><label for="wKK">Klinik Kesihatan</label><input id="wKK"></div>
+        <div class="field"><label for="wDist">District</label><select id="wDist"></select></div>
+        <div class="btnrow"><button type="submit" class="btn sm primary">Save</button><button type="button" class="btn sm" id="whoCancel">Cancel</button><span class="err" id="wErr" aria-live="polite"></span></div>
+      </form>
+    </div>
+  </header>
+
+  <div class="warnbar" id="installHint" hidden>
+    <div><strong>Add this page to your Home Screen.</strong> In Safari tap Share, then <em>Add to Home Screen</em>, and open it from the new icon. Safari can clear a website's saved data if you don't visit for 7 days; Home Screen apps keep it.</div>
+    <div class="btnrow"><button class="btn sm" id="installHide">Got it</button></div>
+  </div>
+  <div class="warnbar" id="storageWarn" hidden>
+    <div><strong>On iPhone, iPad and Safari, this page forgets your entries when you close the tab.</strong> Before you close it, tap <em>Save backup</em>. Where a file can't be saved, the backup is copied instead: paste it into Notes or a WhatsApp chat to yourself. Next time, restore it from the setup screen.</div>
+    <div class="btnrow"><button class="btn sm primary" id="warnSave">Save backup</button><span class="small" id="warnMsg" aria-live="polite"></span></div>
+    <textarea class="manualcopy" id="warnText" readonly hidden aria-label="Backup text to copy"></textarea>
+  </div>
+  <div class="banner" id="exampleBanner" hidden>
+    <span><strong>Example entries shown.</strong> They illustrate the dashboard and are not your figures. Your own entries are kept when you clear them.</span>
+    <button class="btn sm" id="clearExamples">Clear example entries</button>
+  </div>
+  <div class="exbar" id="exampleOffer" hidden>
+    <span>Want to see how the dashboard looks with data?</span>
+    <button class="btn sm" id="loadExamples">Load example entries</button>
+  </div>
+  <div class="linkbar" id="linkBanner" hidden>
+    <span id="linkTxt"><strong>Sign in to the state sheet.</strong> Your entries are sent to your district's sheet, and you can get your log back if this page resets.</span>
+    <button class="btn sm primary" id="linkGo" type="button">Sign in</button>
+  </div>
+  <div class="shell">
+    <aside class="logcol" id="logCol" aria-label="Log work">
+      <div class="mstats" id="mStats">
+        <div class="mrow">
+          <div class="ms"><span>Raw</span><b id="mRaw">0</b></div>
+          <div class="ms lead"><span>Weighted</span><b id="mW">0</b></div>
+          <div class="ms"><span>Avg ×</span><b id="mCx">—</b></div>
+          <div class="ms"><span>Clinical</span><b id="mCT">0h</b></div>
+          <div class="ms"><span>Mgmt</span><b id="mNC">0h</b></div>
+        </div>
+        <div class="mfoot"><span id="mMonth"></span><button type="button" class="btn sm" id="toDash">Breakdown ›</button></div>
+      </div>
+      <section class="panel" aria-labelledby="hLog">
+        <div class="panel-head">
+          <h2 id="hLog">Log work</h2>
+          <div class="seg" role="group" aria-label="Entry type">
+            <button type="button" id="tabClin" aria-pressed="true">Clinical</button>
+            <button type="button" id="tabNon" aria-pressed="false">Management</button>
+          </div>
+        </div>
+
+        <form class="log" id="clinForm" novalidate>
+          <div class="editbar" id="cEdit" hidden><span id="cEditTxt"></span><button type="button" class="btn sm" id="cCancel">Cancel edit</button></div>
+          <div class="row2">
+            <div class="field"><label for="cDate">Date <span class="req">*</span></label><input type="date" id="cDate" required><span class="hint">Backdating allowed.</span></div>
+            <div class="field"><label for="cType">Clinical activity <span class="req">*</span></label>
+              <select id="cType" required>
+                <option value="fms">Case seen by FMS</option>
+                <option value="mo">MO consultation</option>
+                <option value="proc">Procedure</option>
+              </select></div>
+          </div>
+          <div class="field"><label for="cIC">Patient identifier <span class="hint" style="font-weight:400">optional</span></label><input id="cIC" maxlength="20" placeholder="e.g. RN or last 4 of IC" autocomplete="off" style="max-width:20em"><span class="hint">Avoid full IC numbers or names.</span></div>
+          <div class="field"><label for="cDx">Diagnoses <span class="req">*</span> <span class="hint" style="font-weight:400">add one or more</span></label>
+            <div class="dxbox" id="dxBox">
+              <div class="dxchips" id="dxChips"></div>
+              <div class="dxadd">
+                <input id="cDx" list="dxList" placeholder="Type or pick a diagnosis" autocomplete="off" enterkeyhint="done">
+                <button type="button" class="btn sm" id="dxAddBtn">Add</button>
+              </div>
+            </div>
+            <datalist id="dxList"></datalist>
+            <div class="dxquick" id="dxQuick" aria-label="Frequently used diagnoses"></div>
+            <span class="hint">New diagnoses are saved to your list for next time. Manage the list in Settings.</span>
+          </div>
+          <div class="field"><span class="flabel" id="cxLbl">Complexity of case <span class="req">*</span></span>
+            <div class="cx" role="radiogroup" aria-labelledby="cxLbl">
+              <label><input type="radio" name="cx" id="cx1" value="1" checked><span class="t">Less complex</span><span class="mult">× 1</span></label>
+              <label><input type="radio" name="cx" id="cx15" value="1.5"><span class="t">Moderately complex</span><span class="mult">× 1.5</span></label>
+              <label><input type="radio" name="cx" id="cx2" value="2"><span class="t">Very complex</span><span class="mult">× 2</span></label>
+            </div>
+            <details class="calc" id="calc">
+              <summary>Not sure? Use the complexity calculator</summary>
+              <div class="calcbody">
+                <p class="hint">Rate three things about this case. The weighted score picks the complexity for you.</p>
+                <div id="calcDims"></div>
+                <div class="calcres" id="calcRes" aria-live="polite"></div>
+                <div class="btnrow"><button type="button" class="btn sm" id="calcClear">Clear ratings</button></div>
+                <p class="hint">Score = 40% clinical + 30% coordination + 30% risk. Below 2.5 is less complex (×1), 2.5 to 3.9 is moderately complex (×1.5), 4.0 and above is very complex (×2).</p>
+              </div>
+            </details>
+          </div>
+          <div class="field"><label for="cMin">Time spent <span class="hint" style="font-weight:400">optional</span></label>
+          <div class="durwrap" style="max-width:10em"><input type="number" id="cMin" min="0" max="600" step="5" inputmode="numeric" aria-label="Minutes spent on this case"><span>min</span></div>
+          <div class="quick" id="cMinQuick" aria-label="Quick times">
+            <button type="button" class="btn sm" data-cmin="10">10</button><button type="button" class="btn sm" data-cmin="15">15</button><button type="button" class="btn sm" data-cmin="20">20</button><button type="button" class="btn sm" data-cmin="30">30</button><button type="button" class="btn sm" data-cmin="45">45</button><button type="button" class="btn sm" data-cmin="60">60</button>
+          </div><span class="hint">Adds to clinical time on the dashboard.</span></div>
+        <div class="field"><label for="cNote">Notes (optional)</label><input id="cNote" placeholder="e.g. referred from MO, polypharmacy review"></div>
+          <div class="err" id="cErr" aria-live="polite"></div>
+          <button class="btn primary" type="submit" id="cSubmit">Save case</button>
+          <div class="toast" id="cToast" aria-live="polite"></div>
+        </form>
+
+        <form class="log" id="ncForm" novalidate hidden>
+          <div class="editbar" id="nEdit" hidden><span id="nEditTxt"></span><button type="button" class="btn sm" id="nCancel">Cancel edit</button></div>
+          <div class="row2">
+            <div class="field"><label for="nDate">Date <span class="req">*</span></label><input type="date" id="nDate" required><span class="hint">Backdating allowed.</span></div>
+            <div class="field"><label for="nType">Activity <span class="req">*</span></label><select id="nType" required></select></div>
+          </div>
+          <div class="field" id="nOtherWrap" hidden><label for="nOther">Please specify <span class="req">*</span></label><input id="nOther" placeholder="e.g. Community health talk"></div>
+          <div class="field"><label for="nDetails">Details of activity <span class="req">*</span></label><textarea id="nDetails" placeholder="e.g. Monthly KK management meeting, chaired NCD agenda" required></textarea></div>
+          <div class="field"><span class="flabel">Time / duration <span class="req">*</span></span>
+            <div class="dur">
+              <div class="durwrap"><input type="number" id="nH" min="0" max="24" step="1" value="1" aria-label="Hours"><span>hr</span></div>
+              <div class="durwrap"><input type="number" id="nM" min="0" max="59" step="5" value="0" aria-label="Minutes"><span>min</span></div>
+            </div>
+            <div class="quick" aria-label="Quick durations">
+              <button type="button" class="btn sm" data-dur="30">30 min</button>
+              <button type="button" class="btn sm" data-dur="60">1 hr</button>
+              <button type="button" class="btn sm" data-dur="120">2 hr</button>
+              <button type="button" class="btn sm" data-dur="240">Half day</button>
+              <button type="button" class="btn sm" data-dur="480">Full day</button>
+            </div></div>
+          <div class="field"><label for="nNote">Notes (optional)</label><input id="nNote"></div>
+          <div class="err" id="nErr" aria-live="polite"></div>
+          <button class="btn primary" type="submit" id="nSubmit">Save activity</button>
+          <div class="toast" id="nToast" aria-live="polite"></div>
+        </form>
+        <div class="savestate" id="saveState"><span class="dot"></span><span id="saveText">Saved on this device</span></div>
+        <div class="savestate off" id="syncState" aria-live="polite"><span class="dot"></span><span id="syncText"></span></div>
+      </section>
+    </aside>
+
+    <main class="dashcol" id="dashCol">
+      <div class="dashhead">
+        <div class="dhl"><button type="button" class="btn sm backlog" id="backLog">‹ Log work</button><h2 class="dtitle">Dashboard</h2></div>
+        <div class="monthnav" aria-label="Choose month">
+          <button class="iconbtn" id="prevM" aria-label="Previous month">‹</button>
+          <div class="m" id="monthLabel">—</div>
+          <button class="iconbtn" id="nextM" aria-label="Next month">›</button>
+          <button class="btn sm" id="thisM">This month</button>
+        </div>
+      </div>
+  <section class="tiles" aria-label="Month summary">
+    <div class="tile"><span class="label">Raw cases</span><span class="big" id="kRaw">0</span><span class="foot" id="kRawFoot"></span></div>
+    <div class="tile lead"><span class="label">Weighted cases</span><span class="big" id="kW">0</span><span class="foot" id="kWFoot"></span></div>
+    <div class="tile"><span class="label">Average complexity</span><span class="big" id="kCx">—</span><span class="foot" id="kCxFoot"></span></div>
+    <div class="tile"><span class="label">Clinical time</span><span class="big" id="kCT">0h</span><span class="foot" id="kCTFoot"></span></div>
+    <div class="tile"><span class="label">Management time</span><span class="big" id="kNC">0h</span><span class="foot" id="kNCFoot"></span></div>
+  </section>
+  <div class="dgrid">
+    <section class="panel card span2" aria-labelledby="hChart">
+      <div class="panel-head">
+        <h2 id="hChart">Daily activity</h2>
+        <div class="seg" role="group" aria-label="Chart measure">
+          <button type="button" data-mode="w" aria-pressed="true">Weighted</button>
+          <button type="button" data-mode="r" aria-pressed="false">Raw</button>
+          <button type="button" data-mode="h" aria-pressed="false">Management hrs</button>
+        </div>
+      </div>
+      <div class="chartbox" id="chart"></div>
+      <div class="legend" id="legend"></div>
+    </section>
+    <section class="panel card" aria-labelledby="hMix">
+      <div class="panel-head"><h2 id="hMix">Complexity mix</h2><span class="muted small">Cases this month</span></div>
+      <div class="donutwrap"><div class="donut" id="mixDonut" role="img"></div><div class="mixleg" id="mixLeg"></div></div>
+    </section>
+    <section class="panel card" aria-labelledby="hClin">
+      <div class="panel-head"><h2 id="hClin">Clinical work</h2><span class="muted small">Raw vs weighted</span></div>
+      <div class="brows" id="clinRows"></div>
+    </section>
+    <section class="panel card" aria-labelledby="hNon">
+      <div class="panel-head"><h2 id="hNon">Management</h2><span class="muted small">Hours this month</span></div>
+      <div class="brows" id="ncRows"></div>
+    </section>
+    <section class="panel card" aria-labelledby="hDx">
+      <div class="panel-head"><h2 id="hDx">Top diagnoses</h2><span class="muted small">This month</span></div>
+      <ul class="dxtop" id="dxTop"></ul>
+    </section>
+  </div>
+  <section class="panel" aria-labelledby="hTable">
+    <button type="button" class="collhead" id="entToggle" aria-expanded="true" aria-controls="entBody">
+      <span class="chev" aria-hidden="true"></span>
+      <h2 id="hTable">Entries this month</h2>
+      <span class="muted num small" id="entSummary"></span>
+    </button>
+    <div style="display:grid;gap:4px">
+      <div class="exportbar">
+        <button class="btn sm primary" id="xMonth">Export this month to Excel</button>
+        <button class="btn sm" id="xAll">Export all months to Excel</button>
+        <label class="check small" for="xAnon" style="margin-left:4px"><input type="checkbox" id="xAnon"><span>Anonymised: remove patient identifiers and notes</span></label>
+      </div>
+      <div class="xmsg" id="xMsg" aria-live="polite"></div>
+      <div class="exportbar"><label class="btn sm filelbl" for="xlsIn">Import Excel file…<input type="file" id="xlsIn" accept=".xlsx,.xlsm,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel.sheet.macroEnabled.12"></label><span class="hint">Adds entries from an Excel file exported here, including one you edited. Entries already here are skipped.</span></div>
+      <div class="xmsg" id="impMsg" aria-live="polite"></div>
+    </div>
+    <div id="entBody" class="entbody">
+    <div class="tabletools">
+      <div class="seg" role="group" aria-label="Which register">
+        <button type="button" id="regClin" aria-pressed="true">Clinical</button>
+        <button type="button" id="regNon" aria-pressed="false">Management</button>
+      </div>
+      <input type="search" id="filter" placeholder="Search diagnosis, patient ID, details…" aria-label="Search entries">
+    </div>
+    <div class="muted num small" id="entryCount"></div>
+    <div class="tablebox"><table><thead id="thead"></thead><tbody id="rows"></tbody></table></div>
+    </div>
+  </section>
+  <details class="settings" id="settings">
+    <summary>Profile, targets &amp; backup</summary>
+    <div class="sbody">
+      <div style="display:grid;gap:10px">
+        <h3>Profile</h3>
+        <div class="sgrid">
+          <div class="field"><label for="sName">Name of FMS</label><input id="sName"></div>
+          <div class="field"><label for="sKK">Klinik Kesihatan</label><input id="sKK"></div>
+        </div>
+      </div>
+      <div style="display:grid;gap:10px">
+        <h3>Monthly targets (optional)</h3>
+        <p class="muted small">Leave at 0 for no target. Progress is pro-rated to today's date.</p>
+        <div class="sgrid">
+          <div class="field"><label for="sTW">Weighted cases per month</label><input id="sTW" type="number" min="0" step="1"></div>
+          <div class="field"><label for="sTH">Management hours per month</label><input id="sTH" type="number" min="0" step="1"></div>
+        </div>
+      </div>
+      <div style="display:grid;gap:10px">
+        <h3>My diagnosis list</h3>
+        <p class="muted small">These appear as suggestions when you log a case. Add your own, or remove ones you don't use. Removing a diagnosis here doesn't change past entries.</p>
+        <div class="dxadd" style="max-width:520px">
+          <input id="sDxNew" placeholder="Add a diagnosis, e.g. Gout – recurrent" style="border:1px solid var(--line);border-radius:8px;background:var(--bg);padding:8px 10px">
+          <button type="button" class="btn sm" id="sDxAdd">Add to list</button>
+        </div>
+        <input type="search" id="sDxFilter" placeholder="Filter list…" aria-label="Filter diagnosis list" style="max-width:260px;border:1px solid var(--line);border-radius:8px;background:var(--bg);padding:6px 10px">
+        <div class="dxmanage" id="sDxList"></div>
+        <div class="btnrow"><span class="muted small num" id="sDxCount"></span><button type="button" class="btn sm" id="sDxReset">Add back default diagnoses</button></div>
+      </div>
+      <div style="display:grid;gap:10px" id="syncSec">
+        <h3>State sheet account</h3>
+        <p class="muted small">Your entries are sent to your district's Google Sheet, so the state FMS can see FMS workload across Kuala Lumpur and Putrajaya. Patient identifiers and notes stay on this device and are never sent. Signing in on a new phone, or after this page resets, brings your log back (without patient identifiers and notes).</p>
+        <p class="small" id="sAcct"></p>
+        <div class="btnrow"><button class="btn sm primary" id="sSync" type="button">Send now</button><button class="btn sm" id="sSignIn" type="button">Sign in</button><button class="btn sm" id="sSignOut" type="button">Sign out of this device</button><span class="small" id="sSyncMsg" aria-live="polite"></span></div>
+        <details class="supaste" id="sPwBox"><summary>Change password</summary>
+          <div class="sgrid" style="margin-top:8px">
+            <div class="field"><label for="sPwOld">Current password</label><input type="password" id="sPwOld" autocomplete="current-password"></div>
+            <div class="field"><label for="sPwNew">New password (at least 6 characters)</label><input type="password" id="sPwNew" autocomplete="new-password"></div>
+          </div>
+          <div class="btnrow"><button class="btn sm" id="sPwGo" type="button">Change password</button><span class="small" id="sPwMsg" aria-live="polite"></span></div>
+        </details>
+        <div class="field"><label for="sUrl">State sheet link</label><input id="sUrl" placeholder="https://script.google.com/macros/s/…/exec" inputmode="url" autocomplete="off" spellcheck="false"><span class="hint">Usually built in. Change it only if the state FMS asks you to.</span></div>
+      </div>
+      <div class="backup">
+        <h3>Backup and transfer</h3>
+        <p class="muted small">Your log lives only in this browser on this device. Clearing browser data erases it, so copy a backup regularly. Paste a backup on another device to move your log there.</p>
+        <div class="btnrow">
+          <button class="btn sm primary" id="saveJson">Save backup file</button>
+          <button class="btn sm" id="copyJson">Copy backup</button>
+          <button class="btn sm" id="copyCsvC">Copy clinical CSV</button>
+          <button class="btn sm" id="copyCsvN">Copy management CSV</button>
+          <label class="btn sm filelbl" for="fileIn">Restore from file…<input type="file" id="fileIn" accept=".json,.txt,application/json"></label>
+          <button class="btn sm" id="restorePaste">Restore from pasted text</button>
+        </div>
+        <div class="btnrow">
+          <label class="btn sm filelbl" for="mergeIn">Merge from file…<input type="file" id="mergeIn" accept=".json,.txt,application/json"></label>
+          <button class="btn sm" id="mergePaste">Merge pasted text</button>
+        </div>
+        <p class="hint"><strong>Restore</strong> replaces everything on this device with the backup. <strong>Merge</strong> adds the backup's entries to what's already here, skips duplicates, and keeps this device's name, KK and targets.</p>
+        <label for="backupText" class="label">Backup text</label>
+        <textarea id="backupText" spellcheck="false" placeholder="Backup text appears here, or paste a backup to restore"></textarea>
+        <div class="toast" id="backupMsg" aria-live="polite"></div>
+        <div><button class="btn sm danger" id="wipe">Erase all data and start again</button></div>
+      </div>
+    </div>
+  </details>
+    </main>
+  </div>
+  <button class="fab" id="fab" type="button" aria-label="Log work">＋ Log work</button>
+</div>
+
+<script>
+/* XL: small self-contained .xlsx writer with styles, formulas, merges and native charts (no network needed) */
+(function(g){
+  const enc=new TextEncoder();
+  const CRC=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+  const crc32=b=>{let c=0xFFFFFFFF;for(let i=0;i<b.length;i++)c=CRC[(c^b[i])&255]^(c>>>8);return (c^0xFFFFFFFF)>>>0};
+  const xe=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,'');
+  const colL=i=>{let s='';while(i>0){const m=(i-1)%26;s=String.fromCharCode(65+m)+s;i=Math.floor((i-1)/26)}return s}; // 1-based
+  const ref=(r,c)=>colL(c)+r;
+  const aref=(sheet,r1,c1,r2,c2)=>`'${sheet.replace(/'/g,"''")}'!$${colL(c1)}$${r1}`+(r2?`:$${colL(c2)}$${r2}`:'');
+  function zip(files){
+    const parts=[],cd=[];let off=0;
+    files.forEach(f=>{
+      const name=enc.encode(f.name),data=f.data,crc=crc32(data);
+      const h=new DataView(new ArrayBuffer(30));
+      h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x0800,true);h.setUint16(10,0,true);h.setUint16(12,0x21,true);
+      h.setUint32(14,crc,true);h.setUint32(18,data.length,true);h.setUint32(22,data.length,true);h.setUint16(26,name.length,true);
+      parts.push(new Uint8Array(h.buffer),name,data);
+      const c=new DataView(new ArrayBuffer(46));
+      c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(8,0x0800,true);c.setUint16(14,0x21,true);
+      c.setUint32(16,crc,true);c.setUint32(20,data.length,true);c.setUint32(24,data.length,true);c.setUint16(28,name.length,true);c.setUint32(42,off,true);
+      cd.push(new Uint8Array(c.buffer),name);off+=30+name.length+data.length;
+    });
+    const cdSize=cd.reduce((a,b)=>a+b.length,0),e=new DataView(new ArrayBuffer(22));
+    e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);e.setUint32(12,cdSize,true);e.setUint32(16,off,true);
+    const all=parts.concat(cd,[new Uint8Array(e.buffer)]),out=new Uint8Array(all.reduce((a,b)=>a+b.length,0));let p=0;all.forEach(b=>{out.set(b,p);p+=b.length});return out;
+  }
+
+  // ---------- styles ----------
+  function Styles(){
+    const fonts=['<font><sz val="11"/><name val="Calibri"/><family val="2"/></font>'],fills=['<fill><patternFill patternType="none"/></fill>','<fill><patternFill patternType="gray125"/></fill>'],
+      borders=['<border><left/><right/><top/><bottom/><diagonal/></border>'],fmts=[],xfs=['<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'],cache={};
+    const idx=(arr,x)=>{let i=arr.indexOf(x);if(i<0){arr.push(x);i=arr.length-1}return i};
+    const BORD={
+      bottom:'<border><left/><right/><top/><bottom style="thin"><color rgb="FF1F5E8C"/></bottom><diagonal/></border>',
+      top:'<border><left/><right/><top style="thin"><color rgb="FF16212B"/></top><bottom/><diagonal/></border>',
+      hair:'<border><left/><right/><top/><bottom style="hair"><color rgb="FFD9E1E8"/></bottom><diagonal/></border>',
+      box:'<border><left style="thin"><color rgb="FFB8BFDA"/></left><right style="thin"><color rgb="FFB8BFDA"/></right><top style="thin"><color rgb="FFB8BFDA"/></top><bottom style="thin"><color rgb="FFB8BFDA"/></bottom><diagonal/></border>',
+      tile:'<border><left style="medium"><color rgb="FFFFFFFF"/></left><right style="medium"><color rgb="FFFFFFFF"/></right><top/><bottom/><diagonal/></border>'
+    };
+    this.id=function(st){
+      if(!st) return 0; const key=JSON.stringify(st); if(key in cache) return cache[key];
+      const f=st.font||{};
+      const font=`<font>${f.b?'<b/>':''}${f.i?'<i/>':''}<sz val="${f.sz||11}"/>${f.color?`<color rgb="FF${f.color}"/>`:''}<name val="Calibri"/><family val="2"/></font>`;
+      const fontId=idx(fonts,font);
+      const fillId=st.fill?idx(fills,`<fill><patternFill patternType="solid"><fgColor rgb="FF${st.fill}"/><bgColor indexed="64"/></patternFill></fill>`):0;
+      const borderId=st.border?idx(borders,BORD[st.border]):0;
+      let numFmtId=0; if(st.fmt){numFmtId=164+idx(fmts,st.fmt)}
+      const a=st.align||{};
+      const align=(a.h||a.v||a.wrap||a.indent)?`<alignment${a.h?` horizontal="${a.h}"`:''}${a.v?` vertical="${a.v}"`:''}${a.wrap?' wrapText="1"':''}${a.indent?` indent="${a.indent}"`:''}/>`:'';
+      const xf=`<xf numFmtId="${numFmtId}" fontId="${fontId}" fillId="${fillId}" borderId="${borderId}" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1"${align?' applyAlignment="1"':''}>${align}</xf>`;
+      xfs.push(xf); return cache[key]=xfs.length-1;
+    };
+    this.xml=()=>`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">`+
+      (fmts.length?`<numFmts count="${fmts.length}">${fmts.map((f,i)=>`<numFmt numFmtId="${164+i}" formatCode="${xe(f)}"/>`).join('')}</numFmts>`:'')+
+      `<fonts count="${fonts.length}">${fonts.join('')}</fonts><fills count="${fills.length}">${fills.join('')}</fills><borders count="${borders.length}">${borders.join('')}</borders>`+
+      `<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="${xfs.length}">${xfs.join('')}</cellXfs>`+
+      `<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
+  }
+
+  // ---------- charts ----------
+  const C_NS='xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"';
+  const fill=c=>`<a:solidFill><a:srgbClr val="${c}"/></a:solidFill>`;
+  const txt=(sz,b,color)=>`<c:txPr><a:bodyPr/><a:lstStyle/><a:p><a:pPr><a:defRPr sz="${sz}"${b?' b="1"':''}>${fill(color||'5B6875')}</a:defRPr></a:pPr><a:endParaRPr lang="en-US"/></a:p></c:txPr>`;
+  const strCache=v=>`<c:strCache><c:ptCount val="${v.length}"/>${v.map((x,i)=>`<c:pt idx="${i}"><c:v>${xe(x)}</c:v></c:pt>`).join('')}</c:strCache>`;
+  const numCache=(v,fmt)=>`<c:numCache><c:formatCode>${xe(fmt||'General')}</c:formatCode><c:ptCount val="${v.length}"/>${v.map((x,i)=>(x===null||x===''||!isFinite(x))?'':`<c:pt idx="${i}"><c:v>${x}</c:v></c:pt>`).join('')}</c:numCache>`;
+  function chartXml(s){
+    const cat=s.cats.num?`<c:cat><c:numRef><c:f>${s.cats.ref}</c:f>${numCache(s.cats.vals,s.cats.fmt)}</c:numRef></c:cat>`:`<c:cat><c:strRef><c:f>${s.cats.ref}</c:f>${strCache(s.cats.vals)}</c:strRef></c:cat>`;
+    const dl=(show)=>show?`<c:dLbls><c:numFmt formatCode="${xe(s.labelFmt||'General')}" sourceLinked="0"/><c:spPr><a:noFill/><a:ln><a:noFill/></a:ln></c:spPr>${s.kind==='doughnut'?txt(1000,1,'FFFFFF'):txt(900,0,'16212B')}${s.kind==='doughnut'?'':'<c:dLblPos val="outEnd"/>'}<c:showLegendKey val="0"/><c:showVal val="${s.kind==='doughnut'?0:1}"/><c:showCatName val="0"/><c:showSerName val="0"/><c:showPercent val="${s.kind==='doughnut'?1:0}"/><c:showBubbleSize val="0"/>${s.kind==='doughnut'?'<c:showLeaderLines val="0"/>':''}</c:dLbls>`:'';
+    const ser=s.series.map((x,i)=>{
+      const tx=`<c:tx><c:strRef><c:f>${x.nameRef}</c:f>${strCache([x.name])}</c:strRef></c:tx>`;
+      const val=`<c:val><c:numRef><c:f>${x.ref}</c:f>${numCache(x.vals,x.fmt)}</c:numRef></c:val>`;
+      if(s.kind==='doughnut'){
+        const dpts=(x.colors||[]).map((c,j)=>`<c:dPt><c:idx val="${j}"/><c:bubble3D val="0"/><c:spPr>${fill(c)}<a:ln w="19050">${fill('FFFFFF')}</a:ln></c:spPr></c:dPt>`).join('');
+        return `<c:ser><c:idx val="${i}"/><c:order val="${i}"/>${tx}${dpts}${dl(s.labels)}${cat}${val}</c:ser>`;
+      }
+      return `<c:ser><c:idx val="${i}"/><c:order val="${i}"/>${tx}<c:spPr>${fill(x.color)}</c:spPr><c:invertIfNegative val="0"/>${dl(s.labels)}${cat}${val}</c:ser>`;
+    }).join('');
+    const title=`<c:title><c:tx><c:rich><a:bodyPr/><a:lstStyle/><a:p><a:pPr><a:defRPr sz="1200" b="1">${fill('16212B')}</a:defRPr></a:pPr><a:r><a:rPr lang="en-US" sz="1200" b="1">${fill('16212B')}</a:rPr><a:t>${xe(s.title)}</a:t></a:r></a:p></c:rich></c:tx><c:overlay val="0"/></c:title><c:autoTitleDeleted val="0"/>`;
+    const legend=s.legend?`<c:legend><c:legendPos val="${s.kind==='doughnut'?'r':'b'}"/><c:overlay val="0"/>${txt(900)}</c:legend>`:'';
+    let plot;
+    if(s.kind==='doughnut'){
+      plot=`<c:doughnutChart><c:varyColors val="1"/>${ser}<c:firstSliceAng val="0"/><c:holeSize val="55"/></c:doughnutChart>`;
+    } else {
+      const horiz=s.kind==='bar';
+      plot=`<c:barChart><c:barDir val="${horiz?'bar':'col'}"/><c:grouping val="clustered"/><c:varyColors val="0"/>${ser}<c:gapWidth val="${s.gap||70}"/><c:axId val="5001"/><c:axId val="5002"/></c:barChart>`+
+        `<c:catAx><c:axId val="5001"/><c:scaling><c:orientation val="${s.reverse?'maxMin':'minMax'}"/></c:scaling><c:delete val="0"/><c:axPos val="${horiz?'l':'b'}"/>`+
+        `<c:numFmt formatCode="${xe(s.cats.fmt||'General')}" sourceLinked="0"/><c:majorTickMark val="none"/><c:minorTickMark val="none"/><c:tickLblPos val="nextTo"/>`+
+        `<c:spPr><a:ln w="6350">${fill('D9E1E8')}</a:ln></c:spPr>${txt(900)}<c:crossAx val="5002"/><c:crosses val="autoZero"/><c:auto val="1"/><c:lblAlgn val="ctr"/><c:lblOffset val="100"/>${s.skip?`<c:tickLblSkip val="${s.skip}"/>`:''}<c:noMultiLvlLbl val="0"/></c:catAx>`+
+        `<c:valAx><c:axId val="5002"/><c:scaling><c:orientation val="minMax"/><c:min val="0"/></c:scaling><c:delete val="0"/><c:axPos val="${horiz?'b':'l'}"/>`+
+        `<c:majorGridlines><c:spPr><a:ln w="6350">${fill('E6ECF1')}</a:ln></c:spPr></c:majorGridlines><c:numFmt formatCode="General" sourceLinked="0"/><c:majorTickMark val="none"/><c:minorTickMark val="none"/><c:tickLblPos val="nextTo"/>`+
+        `<c:spPr><a:ln><a:noFill/></a:ln></c:spPr>${txt(900)}<c:crossAx val="5001"/><c:crosses val="${s.reverse?'max':'autoZero'}"/><c:crossBetween val="between"/></c:valAx>`;
+    }
+    return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><c:chartSpace ${C_NS}><c:roundedCorners val="0"/><c:chart>${title}<c:plotArea><c:layout/>${plot}<c:spPr><a:noFill/></c:spPr></c:plotArea>${legend}<c:plotVisOnly val="1"/><c:dispBlanksAs val="gap"/></c:chart><c:spPr><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill><a:ln w="9525">${fill('D9E1E8')}</a:ln></c:spPr><c:txPr><a:bodyPr/><a:lstStyle/><a:p><a:pPr><a:defRPr><a:latin typeface="Calibri"/></a:defRPr></a:pPr><a:endParaRPr lang="en-US"/></a:p></c:txPr></c:chartSpace>`;
+  }
+
+  // ---------- workbook ----------
+  function Sheet(wb,name,opt){
+    this.name=name.replace(/[\[\]\*\?\/\\:]/g,'').slice(0,31);this.opt=opt||{};this.rows={};this.heights={};this.merges=[];this.charts=[];this.wb=wb;this.af=null;
+  }
+  Sheet.prototype.set=function(r,c,v,st){(this.rows[r]=this.rows[r]||{})[c]={v,s:this.wb.styles.id(st)};return this};
+  Sheet.prototype.style=function(r1,c1,r2,c2,st){const s=this.wb.styles.id(st);for(let r=r1;r<=r2;r++)for(let c=c1;c<=c2;c++){const row=(this.rows[r]=this.rows[r]||{});if(row[c])row[c].s=s;else row[c]={v:null,s}}return this};
+  Sheet.prototype.merge=function(r1,c1,r2,c2){this.merges.push(ref(r1,c1)+':'+ref(r2,c2));return this};
+  Sheet.prototype.height=function(r,h){this.heights[r]=h;return this};
+  Sheet.prototype.chart=function(spec){this.charts.push(spec);return this};
+  Sheet.prototype.ref=function(r1,c1,r2,c2){return aref(this.name,r1,c1,r2,c2)};
+  Sheet.prototype.autofilter=function(r1,c1,r2,c2){this.af=ref(r1,c1)+':'+ref(r2,c2);return this};
+  Sheet.prototype.button=function(b){(this.shapes=this.shapes||[]).push(b);return this};
+  Sheet.prototype.validate=function(sqref,v){(this.dv=this.dv||[]).push({sqref,...v});return this};
+  Sheet.prototype.xml=function(idx,drawRid){
+    const o=this.opt;
+    const rowNums=[...new Set(Object.keys(this.rows).concat(Object.keys(this.heights)).map(Number))].sort((a,b)=>a-b);
+    const allRows=rowNums.map(r=>{
+      const cells=this.rows[r]||{},h=this.heights[r];
+      return `<row r="${r}"${h?` ht="${h}" customHeight="1"`:''}>`+Object.keys(cells).map(Number).sort((a,b)=>a-b).map(c=>{
+        const {v,s}=cells[c],R=ref(r,c),S=s?` s="${s}"`:'';
+        if(v===null||v===undefined||v==='')return `<c r="${R}"${S}/>`;
+        if(typeof v==='object'&&v.f!==undefined){
+          const cv=v.v;
+          if(typeof cv==='number'&&isFinite(cv))return `<c r="${R}"${S}><f>${xe(v.f)}</f><v>${cv}</v></c>`;
+          return `<c r="${R}"${S} t="str"><f>${xe(v.f)}</f><v>${xe(cv==null?'':cv)}</v></c>`;
+        }
+        if(typeof v==='number')return isFinite(v)?`<c r="${R}"${S}><v>${v}</v></c>`:`<c r="${R}"${S}/>`;
+        return `<c r="${R}"${S} t="inlineStr"><is><t xml:space="preserve">${xe(v)}</t></is></c>`;
+      }).join('')+'</row>';
+    }).join('');
+    const pane=o.freeze?`<pane ySplit="${o.freeze-1}" topLeftCell="A${o.freeze}" activePane="bottomLeft" state="frozen"/><selection pane="bottomLeft" activeCell="A${o.freeze}" sqref="A${o.freeze}"/>`:'';
+    return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">`+
+      `${o.fit?'<sheetPr><pageSetUpPr fitToPage="1"/></sheetPr>':''}`+
+      `<sheetViews><sheetView workbookViewId="0"${idx===0?' tabSelected="1"':''}${o.grid===false?' showGridLines="0"':''}${o.zoom?` zoomScale="${o.zoom}"`:''}>${pane}</sheetView></sheetViews>`+
+      `<sheetFormatPr defaultRowHeight="15"/>`+
+      (o.cols&&o.cols.length?`<cols>${o.cols.map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"${o.colStyles&&o.colStyles[i]?` style="${this.wb.styles.id(o.colStyles[i])}"`:''}/>`).join('')}</cols>`:'')+
+      `<sheetData>${allRows}</sheetData>`+
+      (this.af?`<autoFilter ref="${this.af}"/>`:'')+
+      (this.merges.length?`<mergeCells count="${this.merges.length}">${this.merges.map(m=>`<mergeCell ref="${m}"/>`).join('')}</mergeCells>`:'')+
+      (this.dv&&this.dv.length?`<dataValidations count="${this.dv.length}">${this.dv.map(d=>{
+        const strict=d.strict!==false, f1=d.list?`"${xe(d.list.join(','))}"`:xe(d.src!=null?d.src:d.min), f2=d.max!=null&&!d.list&&d.src==null?`<formula2>${d.max}</formula2>`:'';
+        return `<dataValidation type="${d.type}"${d.type!=='list'&&d.type!=='none'?` operator="${d.op||'between'}"`:''} allowBlank="1" showInputMessage="1" showErrorMessage="${strict?1:0}"${d.etitle?` errorTitle="${xe(d.etitle)}"`:''}${d.error?` error="${xe(d.error)}"`:''}${d.title?` promptTitle="${xe(d.title.slice(0,32))}"`:''}${d.prompt?` prompt="${xe(d.prompt.slice(0,255))}"`:''} sqref="${d.sqref}">${d.type!=='none'?`<formula1>${f1}</formula1>${f2}`:''}</dataValidation>`}).join('')}</dataValidations>`:'')+
+      `<pageMargins left="0.5" right="0.5" top="0.6" bottom="0.6" header="0.3" footer="0.3"/>`+
+      (o.fit?`<pageSetup orientation="${o.landscape?'landscape':'portrait'}" fitToWidth="1" fitToHeight="0"/>`:'')+
+      (drawRid?`<drawing r:id="${drawRid}"/>`:'')+`</worksheet>`;
+  };
+  function Book(){this.sheets=[];this.styles=new Styles()}
+  Book.prototype.name=function(n,refTo){(this.names=this.names||[]).push([n,refTo]);return this};
+  Book.prototype.sheet=function(name,opt){const s=new Sheet(this,name,opt);this.sheets.push(s);return s};
+  Book.prototype.write=function(){
+    const f=(name,s)=>({name,data:enc.encode(s)}),files=[],ct=[],REL='http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+    let chartN=0,drawN=0;
+    this.sheets.forEach((s,i)=>{
+      let rid=null;
+      if(s.charts.length||(s.shapes&&s.shapes.length)){
+        drawN++;rid='rId1';
+        const anchors=[],drels=[];
+        s.charts.forEach((spec,j)=>{
+          chartN++;
+          files.push(f(`xl/charts/chart${chartN}.xml`,chartXml(spec)));
+          ct.push(`<Override PartName="/xl/charts/chart${chartN}.xml" ContentType="application/vnd.openxmlformats-officedocument.drawingml.chart+xml"/>`);
+          drels.push(`<Relationship Id="rId${j+1}" Type="${REL}/chart" Target="../charts/chart${chartN}.xml"/>`);
+          const a=spec.at; // {c1,r1,c2,r2} 1-based, inclusive end
+          anchors.push(`<xdr:twoCellAnchor editAs="oneCell"><xdr:from><xdr:col>${a.c1-1}</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>${a.r1-1}</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from><xdr:to><xdr:col>${a.c2}</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>${a.r2}</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:to>`+
+            `<xdr:graphicFrame macro=""><xdr:nvGraphicFramePr><xdr:cNvPr id="${j+2}" name="Chart ${j+1}"/><xdr:cNvGraphicFramePr/></xdr:nvGraphicFramePr><xdr:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/></xdr:xfrm>`+
+            `<a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/chart"><c:chart xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" r:id="rId${j+1}"/></a:graphicData></a:graphic></xdr:graphicFrame><xdr:clientData/></xdr:twoCellAnchor>`);
+        });
+        (s.shapes||[]).forEach((b,k)=>{const a=b.at,id=s.charts.length+k+2;
+          anchors.push(`<xdr:twoCellAnchor editAs="absolute"><xdr:from><xdr:col>${a.c1-1}</xdr:col><xdr:colOff>${a.dx||0}</xdr:colOff><xdr:row>${a.r1-1}</xdr:row><xdr:rowOff>${a.dy||0}</xdr:rowOff></xdr:from><xdr:to><xdr:col>${a.c2-1}</xdr:col><xdr:colOff>${a.dx2||0}</xdr:colOff><xdr:row>${a.r2-1}</xdr:row><xdr:rowOff>${a.dy2||0}</xdr:rowOff></xdr:to>`+
+            `<xdr:sp macro="${xe(b.macro||'')}" textlink=""><xdr:nvSpPr><xdr:cNvPr id="${id}" name="${xe(b.name||('Button '+(k+1)))}"/><xdr:cNvSpPr/></xdr:nvSpPr><xdr:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/></a:xfrm><a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom>${fill(b.fill||'23308A')}${b.line?`<a:ln w="12700">${fill(b.line)}</a:ln>`:'<a:ln><a:noFill/></a:ln>'}</xdr:spPr>`+
+            `<xdr:txBody><a:bodyPr vertOverflow="clip" horzOverflow="clip" rtlCol="0" anchor="ctr"/><a:lstStyle/><a:p><a:pPr algn="ctr"/><a:r><a:rPr lang="en-US" sz="${b.sz||1100}" b="1">${fill(b.color||'FFFFFF')}</a:rPr><a:t>${xe(b.text)}</a:t></a:r></a:p></xdr:txBody></xdr:sp><xdr:clientData/></xdr:twoCellAnchor>`)});
+        files.push(f(`xl/drawings/drawing${drawN}.xml`,`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="${REL}">${anchors.join('')}</xdr:wsDr>`));
+        files.push(f(`xl/drawings/_rels/drawing${drawN}.xml.rels`,`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${drels.join('')}</Relationships>`));
+        files.push(f(`xl/worksheets/_rels/sheet${i+1}.xml.rels`,`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${REL}/drawing" Target="../drawings/drawing${drawN}.xml"/></Relationships>`));
+        ct.push(`<Override PartName="/xl/drawings/drawing${drawN}.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>`);
+      }
+      files.push(f(`xl/worksheets/sheet${i+1}.xml`,s.xml(i,rid)));
+      ct.push(`<Override PartName="/xl/worksheets/sheet${i+1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`);
+    });
+    const n=this.sheets.length;
+    const head=[
+      f('[Content_Types].xml',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>${ct.join('')}</Types>`),
+      f('_rels/.rels',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${REL}/officeDocument" Target="xl/workbook.xml"/></Relationships>`),
+      f('xl/workbook.xml',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="${REL}"><bookViews><workbookView activeTab="0"/></bookViews><sheets>${this.sheets.map((s,i)=>`<sheet name="${xe(s.name)}" sheetId="${i+1}"${s.opt.hidden?' state="hidden"':''} r:id="rId${i+1}"/>`).join('')}</sheets>${(this.names||[]).length?`<definedNames>${this.names.map(([n,r])=>`<definedName name="${xe(n)}">${xe(r)}</definedName>`).join('')}</definedNames>`:''}<calcPr calcId="191029" fullCalcOnLoad="1"/></workbook>`),
+      f('xl/_rels/workbook.xml.rels',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${this.sheets.map((s,i)=>`<Relationship Id="rId${i+1}" Type="${REL}/worksheet" Target="worksheets/sheet${i+1}.xml"/>`).join('')}<Relationship Id="rId${n+1}" Type="${REL}/styles" Target="styles.xml"/></Relationships>`),
+      f('xl/styles.xml',this.styles.xml())
+    ];
+    return zip(head.concat(files));
+  };
+  g.XL={book:()=>new Book(),col:colL,ref};
+})(typeof window!=='undefined'?window:globalThis);
+</script>
+<script>
+(function(){
+const KEY='fms-workload-v2';
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const CLIN=[{id:'fms',name:'Case seen by FMS',color:'var(--c1)'},{id:'mo',name:'MO consultation',color:'var(--c2)'},{id:'proc',name:'Procedure',color:'var(--c3)'}];
+const NONC=[{id:'meet',name:'Meetings'},{id:'cme',name:'CME / Teaching'},{id:'res',name:'Research'},{id:'audit',name:'Clinical audits'},{id:'mgmt',name:'Management work'},{id:'qa',name:'QA / QI'},{id:'oth',name:'Others'}]
+  .map((t,i)=>({...t,color:'var(--c'+(i+1)+')'}));
+const CX=[{v:1,name:'Less complex',color:'var(--x1)'},{v:1.5,name:'Moderately complex',color:'var(--x15)'},{v:2,name:'Very complex',color:'var(--x2)'}];
+const DX=['Uncontrolled T2DM','Resistant hypertension','Hypertension – newly diagnosed','CKD stage 3b','Dyslipidaemia','Obesity class II','HIV on ART – review','COPD exacerbation','Asthma – poorly controlled','Chronic headache','Erectile dysfunction','Thyroid nodule','Anaemia work-up','Multimorbidity – polypharmacy review','Heart failure – follow-up','Depression'];
+const PROC=['Incision & drainage','Wound debridement','Toenail wedge excision','Joint injection','Excision of sebaceous cyst','Implanon insertion'];
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const uid=()=>Math.random().toString(36).slice(2,10);
+const r1=n=>Math.round(n*10)/10;
+const fmtN=n=>Number.isInteger(n)?String(n):n.toFixed(1);
+const fmtH=m=>{const h=Math.floor(m/60),mm=Math.round(m%60);return mm?`${h}h ${mm}m`:`${h}h`};
+const byId=(arr,id)=>arr.find(x=>x.id===id);
+
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+
+function blank(){return {version:2,profile:null,targets:{weighted:0,hours:0},clinical:[],nonclinical:[]}}
+function examples(){
+  const r=rng(11),today=new Date(),clin=[],nc=[];
+  const pick=a=>a[Math.floor(r()*a.length)];
+  const cxPick=()=>{const x=r();return x<.45?1:x<.82?1.5:2};
+  const ic=()=>String(Math.floor(r()*10000)).padStart(4,'0');
+  for(let back=50;back>=0;back--){
+    const d=new Date(today.getFullYear(),today.getMonth(),today.getDate()-back), wd=d.getDay();
+    if(wd===0||wd===6) continue;
+    const date=ymd(d);
+    const nF=3+Math.floor(r()*5), nM=2+Math.floor(r()*5), nP=r()<.5?Math.floor(r()*2)+1:0;
+    const dxPick=()=>{const a=[pick(DX)];if(r()<.35){const b=pick(DX);if(b!==a[0])a.push(b)}return a};
+    for(let i=0;i<nF;i++) {const cx=cxPick();clin.push({id:uid(),date,type:'fms',ic4:ic(),dx:dxPick(),cx,mins:cx===2?30+5*Math.floor(r()*4):cx===1.5?20+5*Math.floor(r()*3):10+5*Math.floor(r()*3),note:'',example:true})}
+    for(let i=0;i<nM;i++) clin.push({id:uid(),date,type:'mo',ic4:ic(),dx:dxPick(),cx:cxPick(),mins:10+5*Math.floor(r()*3),note:r()<.2?'Discussed with MO, plan revised':'',example:true});
+    for(let i=0;i<nP;i++) clin.push({id:uid(),date,type:'proc',ic4:ic(),dx:[pick(PROC)],cx:r()<.6?1:1.5,mins:20+10*Math.floor(r()*3),note:'',example:true});
+    if(wd===1) nc.push({id:uid(),date,type:'meet',other:'',details:'Weekly KK management meeting',mins:60,note:'',example:true});
+    if(wd===3) nc.push({id:uid(),date,type:'cme',other:'',details:'CME for MOs: hypertension CPG update and case discussion',mins:90,note:'',example:true});
+    if(wd===2&&r()<.6) nc.push({id:uid(),date,type:'mgmt',other:'',details:'Clinic KPI review and staff roster',mins:45,note:'',example:true});
+    if(wd===4&&r()<.4) nc.push({id:uid(),date,type:'audit',other:'',details:'Diabetes clinic HbA1c audit – data collection',mins:120,note:'',example:true});
+    if(wd===5&&r()<.3) nc.push({id:uid(),date,type:'qa',other:'',details:'QI project: reducing missed follow-up in NCD clinic',mins:60,note:'',example:true});
+    if(r()<.06) nc.push({id:uid(),date,type:'res',other:'',details:'HyADS proposal writing',mins:90,note:'',example:true});
+    if(r()<.04) nc.push({id:uid(),date,type:'oth',other:'Community health talk',details:'Men’s health talk at community hall',mins:120,note:'',example:true});
+  }
+  return {clin,nc};
+}
+function valid(o){return o&&typeof o==='object'&&Array.isArray(o.clinical)&&Array.isArray(o.nonclinical)}
+function load(){try{const t=localStorage.getItem(KEY);if(!t)return null;const o=JSON.parse(t);return valid(o)?o:null}catch(e){return null}}
+let state=load()||blank();
+const dxs=e=>Array.isArray(e.dx)?e.dx:(e.dx?[String(e.dx)]:[]);
+const dxStr=e=>dxs(e).join('; ');
+const dxKey=s=>String(s).trim().toLowerCase();
+function normalize(s){
+  s.targets=s.targets||{weighted:0,hours:0};
+  s.clinical.forEach(e=>{e.dx=dxs(e)});
+  if(!Array.isArray(s.dxList)) s.dxList=DX.concat(PROC);
+  const seen=new Set(s.dxList.map(dxKey));
+  s.clinical.forEach(e=>e.dx.forEach(d=>{if(!seen.has(dxKey(d))){seen.add(dxKey(d));s.dxList.push(d)}}));
+  return s;
+}
+normalize(state);
+function save(){
+  let ok=true;try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){ok=false}
+  $('saveState').classList.toggle('bad',!ok);
+  $('saveText').textContent=ok?'Saved on this device':'Browser storage is blocked here, so entries will be lost on reload. Copy a backup.';
+  scheduleSync();
+}
+
+const now=new Date(), todayStr=ymd(now);
+let vy=now.getFullYear(), vm=now.getMonth(), chartMode='w', reg='clin';
+
+function monthInfo(){
+  const days=new Date(vy,vm+1,0).getDate();
+  const isCur=vy===now.getFullYear()&&vm===now.getMonth();
+  const isPast=!isCur&&new Date(vy,vm+1,1)<=new Date(now.getFullYear(),now.getMonth(),1);
+  return {days,isCur,isPast,elapsed:isCur?now.getDate():(isPast?days:0),prefix:vy+'-'+pad(vm+1)+'-'};
+}
+function status(v,target,mi){
+  if(!target) return null;
+  if(!mi.elapsed) return {cls:'na',txt:'Not started'};
+  const exp=target*mi.elapsed/mi.days;
+  if(v>=target) return {cls:'ok',txt:'Target met'};
+  if(v>=exp) return {cls:'ok',txt:'On track'};
+  if(v>=exp*.8) return {cls:'warn',txt:'Slightly behind'};
+  return {cls:'crit',txt:'Behind'};
+}
+
+const EPHEMERAL=(()=>{
+  let inFrame=true; try{inFrame=window.top!==window.self}catch(e){}
+  const ua=navigator.userAgent||'';
+  const ios=/iPhone|iPad|iPod/.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  const safari=/Safari\//.test(ua)&&!/Chrome\/|Chromium|Edg\/|OPR\/|Firefox\//.test(ua);
+  return inFrame&&(ios||safari);
+})();
+function showView(){
+  const has=!!(state.profile&&state.profile.name);
+  $('setupView').hidden=has; $('appView').hidden=!has;
+  $('storageWarn').hidden=!EPHEMERAL;
+  if(has) render(); else openSetup('first');
+}
+
+$('setupForm').addEventListener('submit',ev=>{ev.preventDefault();submitSetup()});
+
+function render(){
+  const mi=monthInfo(), p=state.profile||{};
+  $('who').innerHTML=`<strong>${esc(p.name)}</strong> · ${esc(p.kk)}${p.district?` · ${esc(p.district)}`:''}`;
+  $('monthLabel').textContent=MONTHS[vm]+' '+vy;
+  const hasEx=state.clinical.some(e=>e.example)||state.nonclinical.some(e=>e.example);
+  $('exampleBanner').hidden=!hasEx; $('exampleOffer').hidden=hasEx;
+
+  const C=state.clinical.filter(e=>e.date.startsWith(mi.prefix));
+  const N=state.nonclinical.filter(e=>e.date.startsWith(mi.prefix));
+  const raw=C.length, w=C.reduce((a,e)=>a+e.cx,0), mins=N.reduce((a,e)=>a+e.mins,0);
+  const days=new Set(C.map(e=>e.date)).size;
+
+  // tiles
+  $('kRaw').textContent=raw;
+  $('kRawFoot').textContent=days?`${days} clinical day${days===1?'':'s'} · ${fmtN(r1(raw/days))} per day`:'No cases yet';
+  $('kW').textContent=fmtN(r1(w));
+  const sw=status(w,+state.targets.weighted,mi);
+  $('kWFoot').innerHTML=sw?`of ${state.targets.weighted} target <span class="chip ${sw.cls}">${sw.txt}</span>`:(raw?`+${fmtN(r1(w-raw))} over raw count`:'Raw count × complexity');
+  $('kCx').innerHTML=raw?`× ${(w/raw).toFixed(2)}`:'—';
+  const vc=C.filter(e=>e.cx===2).length;
+  $('kCxFoot').textContent=raw?`${Math.round(vc/raw*100)}% very complex`:'Scale × 1 to × 2';
+  const cmins=C.reduce((a,e)=>a+(+e.mins||0),0), timed=C.filter(e=>+e.mins>0).length;
+  $('kCT').textContent=fmtH(cmins);
+  $('kCTFoot').textContent=timed?(timed<raw?`Time logged for ${timed} of ${raw} cases`:`${Math.round(cmins/timed)} min per case`):(raw?'Add time spent when you log a case':'No cases yet');
+  $('kNC').textContent=fmtH(mins);
+  const hShort=m=>{const h=m/60;return h===0?'0h':h<10?`${(Math.round(h*10)/10)}h`:`${Math.round(h)}h`};
+  $('mRaw').textContent=raw; $('mW').textContent=fmtN(r1(w)); $('mCx').textContent=raw?(w/raw).toFixed(2):'—';
+  $('mCT').textContent=hShort(cmins); $('mNC').textContent=hShort(mins); $('mMonth').textContent=`${MONTHS[vm]} ${vy}`;
+  const sh=status(mins/60,+state.targets.hours,mi);
+  $('kNCFoot').innerHTML=sh?`of ${state.targets.hours}h target <span class="chip ${sh.cls}">${sh.txt}</span>`:`${N.length} activit${N.length===1?'y':'ies'}`;
+
+  // clinical breakdown
+  const maxW=Math.max(1,...CLIN.map(t=>C.filter(e=>e.type===t.id).reduce((a,e)=>a+e.cx,0)));
+  $('clinRows').innerHTML=CLIN.map(t=>{
+    const es=C.filter(e=>e.type===t.id), rr=es.length, ww=es.reduce((a,e)=>a+e.cx,0);
+    return `<div class="brow"><div class="l1"><span class="nm"><span class="sw" style="background:${t.color}"></span>${t.name}</span>
+      <span class="vals">${rr} raw · <strong>${fmtN(r1(ww))}</strong> wtd</span></div>
+      <div class="bar" role="img" aria-label="${t.name}: ${rr} raw, ${fmtN(r1(ww))} weighted"><i style="width:${ww/maxW*100}%;background:${t.color}"></i><i class="raw" style="width:${rr/maxW*100}%;background:var(--surface)"></i></div></div>`;
+  }).join('')+`<p class="hint">Solid bar = weighted cases. Lighter section = raw count.</p>`;
+
+  // complexity mix
+  const cnt=CX.map(x=>C.filter(e=>e.cx===x.v).length);
+  {const R=46,Cc=2*Math.PI*R;let off=0;
+   const segs=raw?CX.map((x,i)=>{const len=cnt[i]/raw*Cc;const seg=cnt[i]?`<circle cx="60" cy="60" r="${R}" fill="none" stroke="${x.color}" stroke-width="18" stroke-dasharray="${len.toFixed(2)} ${(Cc-len).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 60 60)"><title>${x.name}: ${cnt[i]}</title></circle>`:'';off+=len;return seg}).join(''):'';
+   $('mixDonut').innerHTML=`<svg viewBox="0 0 120 120" width="100%" height="100%"><circle cx="60" cy="60" r="${R}" fill="none" stroke="var(--sunk)" stroke-width="18"/>${segs}<text x="60" y="58" text-anchor="middle" class="dnum">${raw}</text><text x="60" y="74" text-anchor="middle" class="dlab">cases</text></svg>`;
+   $('mixDonut').setAttribute('aria-label',CX.map((x,i)=>`${x.name} ${cnt[i]}`).join(', '));}
+  $('mixLeg').innerHTML=CX.map((x,i)=>`<span><span class="sw" style="background:${x.color}"></span>${x.name} (×${x.v}) · <span class="num">${cnt[i]}</span>${raw?` · ${Math.round(cnt[i]/raw*100)}%`:''}</span>`).join('');
+
+  // top diagnoses
+  const dc={}; C.forEach(e=>dxs(e).forEach(d=>{const k=dxKey(d);(dc[k]=dc[k]||{name:d,n:0}).n++}));
+  const top=Object.values(dc).sort((a,b)=>b.n-a.n).slice(0,8), topMax=top[0]?top[0].n:1;
+  $('dxTop').innerHTML=top.length?top.map(t=>`<li><span>${esc(t.name)}</span><span class="num">${t.n}</span><div class="bar"><i style="width:${t.n/topMax*100}%;background:var(--x15)"></i></div></li>`).join('')
+    :'<li class="muted">No diagnoses logged this month yet.</li>';
+
+  // management breakdown
+  const ncMins=NONC.map(t=>N.filter(e=>e.type===t.id).reduce((a,e)=>a+e.mins,0));
+  const maxM=Math.max(1,...ncMins);
+  $('ncRows').innerHTML=NONC.map((t,i)=>{
+    const n=N.filter(e=>e.type===t.id).length;
+    return `<div class="brow"><div class="l1"><span class="nm"><span class="sw" style="background:${t.color}"></span>${t.name}</span>
+      <span class="vals">${n ? `${n}× · ` : ''}<strong>${fmtH(ncMins[i])}</strong></span></div>
+      <div class="bar"><i style="width:${ncMins[i]/maxM*100}%;background:${t.color}"></i></div></div>`;
+  }).join('');
+
+  drawChart(C,N,mi);
+  renderTable(C,N);
+  renderSettings();
+}
+
+function drawChart(C,N,mi){
+  const series=chartMode==='h'?NONC:CLIN;
+  const val=(d,s)=>{const ds=mi.prefix+pad(d);
+    if(chartMode==='h') return N.filter(e=>e.date===ds&&e.type===s.id).reduce((a,e)=>a+e.mins,0)/60;
+    const es=C.filter(e=>e.date===ds&&e.type===s.id); return chartMode==='w'?es.reduce((a,e)=>a+e.cx,0):es.length;};
+  const W=Math.max(320,Math.round($('chart').clientWidth||760)),H=W<520?210:240,L=34,R=8,T=12,B=26,iw=W-L-R,ih=H-T-B;
+  const grid=[]; let max=0;
+  for(let d=1;d<=mi.days;d++){const row=series.map(s=>val(d,s));grid.push(row);max=Math.max(max,row.reduce((a,b)=>a+b,0))}
+  const step=max<=4?1:max<=10?2:max<=25?5:max<=50?10:20, top=Math.max(step,Math.ceil(max/step)*step);
+  const y=v=>T+ih-(v/top)*ih, bw=iw/mi.days, gap=Math.max(1.5,bw*.22);
+  let g='',bars='',labels='';
+  for(let v=0;v<=top+1e-9;v+=step) g+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end">${v}</text>`;
+  const unit=chartMode==='h'?'h':chartMode==='w'?' weighted':' cases';
+  for(let d=1;d<=mi.days;d++){
+    const x=L+(d-1)*bw+gap/2, w=bw-gap; let acc=0;
+    series.forEach((s,i)=>{const v=grid[d-1][i]; if(!v) return; const y0=y(acc),y1=y(acc+v);
+      bars+=`<rect x="${x.toFixed(1)}" y="${y1.toFixed(1)}" width="${w.toFixed(1)}" height="${Math.max(0,y0-y1).toFixed(1)}" fill="${s.color}"><title>${d} ${MONTHS[vm].slice(0,3)} · ${esc(s.name)}: ${fmtN(r1(v))}${unit}</title></rect>`; acc+=v;});
+    const isToday=mi.isCur&&d===now.getDate();
+    if(d===1||d%5===0||isToday) labels+=`<text x="${(x+w/2).toFixed(1)}" y="${H-8}" text-anchor="middle"${isToday?' class="today"':''}>${d}</text>`;
+  }
+  $('chart').innerHTML=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Daily ${chartMode==='h'?'management hours':chartMode==='w'?'weighted cases':'raw cases'} for ${MONTHS[vm]} ${vy}">${g}${bars}${labels}</svg>`;
+  $('legend').innerHTML=series.map(s=>`<span><span class="sw" style="background:${s.color}"></span>${s.name}</span>`).join('');
+}
+
+function renderTable(C,N){
+  $('entSummary').textContent=`${C.length} case${C.length===1?'':'s'} · ${N.length} activit${N.length===1?'y':'ies'}`;
+  const q=$('filter').value.trim().toLowerCase();
+  const dstr=s=>{const d=new Date(s+'T00:00');return `${d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'})} <span class="muted">${d.toLocaleDateString('en-GB',{weekday:'short'})}</span>`};
+  const ex=e=>e.example?' <span class="chip na">example</span>':'';
+  const del=id=>`<span class="acts"><button class="btn sm" data-edit="${id}">Edit</button><button class="btn sm danger" data-del="${id}">Delete</button></span>`;
+  const trc=e=>editing&&editing.id===e.id?' class="editing"':'';
+  if(reg==='clin'){
+    $('thead').innerHTML='<tr><th>Date</th><th>Activity</th><th>Patient ID</th><th>Diagnoses</th><th>Complexity</th><th class="n">Weight</th><th class="n">Time</th><th>Notes</th><th></th></tr>';
+    const rows=C.filter(e=>!q||[e.ic4,dxStr(e),e.note,byId(CLIN,e.type)?.name].join(' ').toLowerCase().includes(q)).sort((a,b)=>b.date.localeCompare(a.date));
+    $('entryCount').textContent=`${rows.length} case${rows.length===1?'':'s'}`;
+    $('rows').innerHTML=rows.length?rows.map(e=>{const t=byId(CLIN,e.type)||CLIN[0],x=CX.find(c=>c.v===e.cx)||CX[0];
+      return `<tr${trc(e)}><td class="num" data-label="Date">${dstr(e.date)}</td><td data-label="Activity"><span class="cat"><span class="sw" style="background:${t.color}"></span>${t.name}</span></td>
+      <td class="num" data-label="Patient ID">${e.ic4?esc(e.ic4):'<span class="muted">—</span>'}</td><td data-label="Diagnoses">${dxs(e).map(esc).join('<br>')}</td><td data-label="Complexity"><span class="cat"><span class="sw" style="background:${x.color}"></span>${x.name}${e.calc?`<span class="scoretag" title="Calculator: clinical ${e.calc.t}, coordination ${e.calc.p}, risk ${e.calc.r}">${e.calc.score.toFixed(1)}</span>`:''}</span></td>
+      <td class="n" data-label="Weight">×${x.v}</td><td class="n" data-label="Time">${+e.mins>0?e.mins+' min':'<span class="muted">—</span>'}</td><td class="note" data-label="Notes">${esc(e.note)}${ex(e)}</td><td class="act" style="text-align:right">${del(e.id)}</td></tr>`}).join('')
+      :`<tr><td colspan="9" class="empty">${q?'No cases match your search.':`No clinical cases for ${MONTHS[vm]}. Use “Log work” to add the first one.`}</td></tr>`;
+  } else {
+    $('thead').innerHTML='<tr><th>Date</th><th>Activity</th><th>Details</th><th class="n">Duration</th><th>Notes</th><th></th></tr>';
+    const rows=N.filter(e=>!q||[e.details,e.other,e.note,byId(NONC,e.type)?.name].join(' ').toLowerCase().includes(q)).sort((a,b)=>b.date.localeCompare(a.date));
+    $('entryCount').textContent=`${rows.length} activit${rows.length===1?'y':'ies'}`;
+    $('rows').innerHTML=rows.length?rows.map(e=>{const t=byId(NONC,e.type)||NONC[6];
+      return `<tr${trc(e)}><td class="num" data-label="Date">${dstr(e.date)}</td><td data-label="Activity"><span class="cat"><span class="sw" style="background:${t.color}"></span>${t.name}${e.type==='oth'&&e.other?`: ${esc(e.other)}`:''}</span></td>
+      <td data-label="Details">${esc(e.details)}</td><td class="n" data-label="Duration">${fmtH(e.mins)}</td><td class="note" data-label="Notes">${esc(e.note)}${ex(e)}</td><td class="act" style="text-align:right">${del(e.id)}</td></tr>`}).join('')
+      :`<tr><td colspan="6" class="empty">${q?'No activities match your search.':`No management activities for ${MONTHS[vm]}. Switch “Log work” to Management to add one.`}</td></tr>`;
+  }
+}
+
+function renderSettings(){
+  const set=(id,v)=>{const el=$(id); if(document.activeElement!==el) el.value=v};
+  set('sName',state.profile?.name||''); set('sKK',state.profile?.kk||'');
+  set('sTW',state.targets.weighted||0); set('sTH',state.targets.hours||0);
+  $('dxList').innerHTML=state.dxList.map(d=>`<option value="${esc(d)}"></option>`).join('');
+  renderQuick(); renderDxManage(); renderSync();
+}
+// ---- diagnoses: chip input, quick picks, managed list ----
+let pendingDx=[];
+function inList(d){return state.dxList.some(x=>dxKey(x)===dxKey(d))}
+function addToList(d){d=String(d).trim();if(d&&!inList(d)){state.dxList.push(d);return true}return false}
+function renderChips(){
+  $('dxChips').innerHTML=pendingDx.map((d,i)=>`<span class="dxchip"><span>${esc(d)}</span><button type="button" data-rmdx="${i}" aria-label="Remove ${esc(d)}">×</button></span>`).join('');
+  renderQuick();
+}
+function renderQuick(){
+  const cutoff=ymd(new Date(now.getFullYear(),now.getMonth(),now.getDate()-90));
+  const cnt={}; state.clinical.forEach(e=>{if(e.date>=cutoff&&!e.example)dxs(e).forEach(d=>{const k=dxKey(d);(cnt[k]=cnt[k]||{name:d,n:0}).n++})});
+  let picks=Object.values(cnt).sort((a,b)=>b.n-a.n).map(x=>x.name);
+  if(picks.length<8) picks=picks.concat(state.dxList.filter(d=>!picks.some(p=>dxKey(p)===dxKey(d))));
+  picks=picks.filter(d=>!pendingDx.some(p=>dxKey(p)===dxKey(d))).slice(0,8);
+  $('dxQuick').innerHTML=picks.map(d=>`<button type="button" class="qchip" data-qdx="${esc(d)}">+ ${esc(d)}</button>`).join('');
+}
+function addPending(d){
+  d=String(d||'').trim().replace(/\s+/g,' '); if(!d) return;
+  const existing=state.dxList.find(x=>dxKey(x)===dxKey(d)); if(existing) d=existing;
+  if(!pendingDx.some(p=>dxKey(p)===dxKey(d))) pendingDx.push(d);
+  $('cDx').value=''; renderChips();
+}
+function renderDxManage(){
+  const f=($('sDxFilter').value||'').trim().toLowerCase();
+  const list=state.dxList.map((d,i)=>({d,i})).filter(x=>!f||x.d.toLowerCase().includes(f)).sort((a,b)=>a.d.localeCompare(b.d));
+  $('sDxList').innerHTML=list.length?list.map(x=>`<span class="dxchip"><span>${esc(x.d)}</span><button type="button" data-dellist="${x.i}" aria-label="Remove ${esc(x.d)} from list">×</button></span>`).join(''):'<span class="muted small">No diagnoses match.</span>';
+  $('sDxCount').textContent=`${state.dxList.length} diagnos${state.dxList.length===1?'is':'es'} in your list`;
+}
+$('dxAddBtn').onclick=()=>{addPending($('cDx').value);$('cDx').focus()};
+$('cDx').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addPending($('cDx').value)} else if(e.key==='Backspace'&&!$('cDx').value&&pendingDx.length){pendingDx.pop();renderChips()}});
+// picking from the suggestion list adds the chip straight away
+$('cDx').addEventListener('input',e=>{if(e.inputType==='insertReplacementText'||(!e.inputType&&inList($('cDx').value)))addPending($('cDx').value)});
+$('dxChips').addEventListener('click',e=>{const b=e.target.closest('[data-rmdx]');if(!b)return;pendingDx.splice(+b.dataset.rmdx,1);renderChips();$('cDx').focus()});
+$('dxQuick').addEventListener('click',e=>{const b=e.target.closest('[data-qdx]');if(b)addPending(b.dataset.qdx)});
+$('sDxAdd').onclick=()=>{const v=$('sDxNew').value.trim().replace(/\s+/g,' ');if(!v)return;
+  if(addToList(v)){save();$('sDxNew').value='';render();msgDx(`Added “${v}” to your list.`)}else msgDx(`“${v}” is already in your list.`)};
+$('sDxNew').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('sDxAdd').click()}});
+$('sDxFilter').addEventListener('input',renderDxManage);
+$('sDxList').addEventListener('click',e=>{const b=e.target.closest('[data-dellist]');if(!b)return;state.dxList.splice(+b.dataset.dellist,1);save();render()});
+$('sDxReset').onclick=()=>{let n=0;DX.concat(PROC).forEach(d=>{if(addToList(d))n++});save();render();msgDx(n?`Added back ${n} default diagnos${n===1?'is':'es'}.`:'All defaults are already in your list.')};
+function msgDx(t){$('sDxCount').textContent=t;setTimeout(renderDxManage,2500)}
+
+function armed(btn,label,fn){
+  if(btn.classList.contains('arm')){fn();return}
+  const orig=btn.textContent;btn.classList.add('arm');btn.textContent=label;
+  setTimeout(()=>{if(btn.isConnected&&btn.classList.contains('arm')){btn.classList.remove('arm');btn.textContent=orig}},3500);
+}
+function toast(id,t){$(id).textContent=t;clearTimeout(toast[id]);toast[id]=setTimeout(()=>$(id).textContent='',3000)}
+function goToDate(date){const [yy,mm]=date.split('-').map(Number);vy=yy;vm=mm-1}
+
+// month nav
+$('prevM').onclick=()=>{vm--;if(vm<0){vm=11;vy--}render()};
+$('nextM').onclick=()=>{vm++;if(vm>11){vm=0;vy++}render()};
+$('thisM').onclick=()=>{vy=now.getFullYear();vm=now.getMonth();render()};
+$('clearExamples').onclick=()=>{state.clinical=state.clinical.filter(e=>!e.example);state.nonclinical=state.nonclinical.filter(e=>!e.example);save();render();$('loadExamples').focus()};
+$('loadExamples').onclick=()=>{const ex=examples();state.clinical=state.clinical.concat(ex.clin);state.nonclinical=state.nonclinical.concat(ex.nc);save();vy=now.getFullYear();vm=now.getMonth();render();$('clearExamples').focus()};
+
+// entry tabs
+function setTab(t){
+  $('tabClin').setAttribute('aria-pressed',t==='clin');$('tabNon').setAttribute('aria-pressed',t==='non');
+  $('clinForm').hidden=t!=='clin';$('ncForm').hidden=t!=='non';
+}
+$('tabClin').onclick=()=>setTab('clin'); $('tabNon').onclick=()=>setTab('non');
+function setReg(t){reg=t;$('regClin').setAttribute('aria-pressed',t==='clin');$('regNon').setAttribute('aria-pressed',t==='non');render()}
+$('regClin').onclick=()=>setReg('clin'); $('regNon').onclick=()=>setReg('non');
+$('filter').addEventListener('input',()=>render());
+document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{chartMode=b.dataset.mode;document.querySelectorAll('[data-mode]').forEach(x=>x.setAttribute('aria-pressed',x===b));render()});
+
+// ---- complexity calculator (3-variable weighted sum: 0.4 T + 0.3 P + 0.3 R) ----
+const DIMS=[
+  {k:'t',name:'Clinical complexity',w:.4,lv:[
+    'Single stable condition, routine follow-up',
+    'One condition needing adjustment, or two stable conditions',
+    'Multimorbidity (2–3 active), polypharmacy review or some diagnostic uncertainty',
+    'Complex multimorbidity, conflicting guidelines, or unclear diagnosis needing work-up',
+    'Several uncontrolled conditions with end-organ involvement, or a rare or serious condition']},
+  {k:'p',name:'Coordination & workload',w:.3,lv:[
+    'Single consultation, no extra steps',
+    'Simple investigation or medication change',
+    'Several investigations, structured counselling, or one referral',
+    'Multiple referrals or teams, family meeting, or lengthy reports and forms',
+    'Multi-agency coordination or case conference (hospital, welfare, legal or medical report)']},
+  {k:'r',name:'Risk & consequence',w:.3,lv:[
+    'Low risk, stable',
+    'Mild risk, safety-net advice is enough',
+    'Could deteriorate, high-risk medication, or needs close follow-up',
+    'Red flags, possible serious diagnosis, safeguarding or medico-legal concern',
+    'Unstable or emergency, needs urgent action or transfer']}
+];
+let calc={t:0,p:0,r:0};
+const calcScore=c=>(c.t&&c.p&&c.r)?Math.round((c.t*.4+c.p*.3+c.r*.3)*10)/10:null;
+const tierOf=sc=>sc>=4?2:sc>=2.5?1.5:1;
+function renderCalc(){
+  $('calcDims').innerHTML=DIMS.map(d=>`<div class="dim"><div class="dh"><b>${d.name}</b><span>${Math.round(d.w*100)}%</span></div>
+    <div class="lv" role="group" aria-label="${d.name}, 1 to 5">${[1,2,3,4,5].map(n=>`<button type="button" data-dim="${d.k}" data-lv="${n}" aria-pressed="${calc[d.k]===n}" title="${esc(d.lv[n-1])}">${n}</button>`).join('')}</div>
+    <div class="desc">${calc[d.k]?`<strong>${calc[d.k]}:</strong> ${esc(d.lv[calc[d.k]-1])}`:'1 = '+esc(d.lv[0]).toLowerCase()+' … 5 = '+esc(d.lv[4]).toLowerCase()}</div></div>`).join('');
+  const sc=calcScore(calc);
+  if(sc===null){const left=DIMS.filter(d=>!calc[d.k]).map(d=>d.name.toLowerCase());$('calcRes').innerHTML=`<span class="muted">Rate ${left.join(', ')} to get a score.</span>`;return}
+  const x=CX.find(c=>c.v===tierOf(sc));
+  const chosen=parseFloat((document.querySelector('input[name="cx"]:checked')||{}).value);
+  const note=chosen===x.v?'Selected above':`You chose ${(CX.find(c=>c.v===chosen)||{}).name||'another level'} instead, so this score won’t be saved with the case`;
+  $('calcRes').innerHTML=`<span>Score <span class="sc">${sc.toFixed(1)}</span></span><span class="cat"><span class="sw" style="background:${x.color}"></span><strong>${x.name} (×${x.v})</strong></span><span class="muted small">${note}</span>`;
+}
+function applyCalc(){
+  const sc=calcScore(calc); if(sc===null) return;
+  const r=document.querySelector(`input[name="cx"][value="${tierOf(sc)}"]`); if(r) r.checked=true;
+}
+function resetCalc(open){calc={t:0,p:0,r:0};renderCalc();$('calc').open=!!open}
+$('calcDims').addEventListener('click',e=>{const b=e.target.closest('[data-dim]');if(!b)return;const k=b.dataset.dim,n=+b.dataset.lv;calc[k]=calc[k]===n?0:n;applyCalc();renderCalc()});
+$('calcClear').onclick=()=>resetCalc(true);
+document.querySelectorAll('input[name="cx"]').forEach(r=>r.addEventListener('change',renderCalc));
+renderCalc();
+
+// clinical form
+['cDate','nDate'].forEach(id=>{$(id).value=todayStr;$(id).max=todayStr});
+$('cIC').addEventListener('input',e=>{const v=e.target.value.replace(/[\u0000-\u001F]/g,'').slice(0,20);if(v!==e.target.value)e.target.value=v});
+$('clinForm').addEventListener('submit',ev=>{
+  ev.preventDefault();
+  const date=$('cDate').value, type=$('cType').value, ic4=$('cIC').value.trim();
+  if($('cDx').value.trim()) addPending($('cDx').value);   // text typed but not yet added still counts
+  const cx=parseFloat((document.querySelector('input[name="cx"]:checked')||{}).value);
+  const miss=[]; if(!date)miss.push('date'); if(!pendingDx.length)miss.push('at least one diagnosis'); if(!cx)miss.push('complexity');
+  if(date&&date>todayStr) miss.push('a date that is not in the future');
+  if(parseInt($('cMin').value,10)>600) miss.push('a time of 600 minutes or less');
+  if(miss.length){$('cErr').textContent='Please enter '+miss.join(', ')+'.';return}
+  $('cErr').textContent='';
+  const sc=calcScore(calc);
+  const cmin=parseInt($('cMin').value,10);
+  const rec={date,type,ic4:ic4||'',dx:pendingDx.slice(),cx,mins:cmin>0?cmin:undefined,note:$('cNote').value.trim()};
+  if(sc!==null&&tierOf(sc)===cx) rec.calc={t:calc.t,p:calc.p,r:calc.r,score:sc}; else rec.calc=undefined;
+  const wasEdit=editing&&editing.kind==='clin'&&state.clinical.find(e=>e.id===editing.id);
+  if(wasEdit) Object.assign(wasEdit,rec); else state.clinical.push({id:uid(),...rec});
+  const added=pendingDx.filter(d=>addToList(d));
+  if(wasEdit) endEdit();
+  save(); goToDate(date); if(reg!=='clin') reg='clin',$('regClin').setAttribute('aria-pressed',true),$('regNon').setAttribute('aria-pressed',false);
+  const nd=pendingDx.length; pendingDx=[]; renderChips();
+  render();
+  $('cIC').value='';$('cDx').value='';$('cNote').value='';$('cMin').value='';$('cx1').checked=true;resetCalc(false);
+  toast('cToast',`${wasEdit?'Updated':'Saved'}: ${byId(CLIN,type).name}${ic4?` · ${ic4}`:''} · ${nd} diagnos${nd===1?'is':'es'} · ×${cx}${rec.calc?` (score ${rec.calc.score.toFixed(1)})`:''}.${added.length?` Added ${added.length} new diagnos${added.length===1?'is':'es'} to your list.`:''}`);
+  $('cIC').focus();
+});
+
+// management form
+$('nType').innerHTML=NONC.map(t=>`<option value="${t.id}">${t.name}${t.id==='oth'?' (please specify)':''}</option>`).join('');
+$('nType').addEventListener('change',()=>{$('nOtherWrap').hidden=$('nType').value!=='oth'});
+document.querySelectorAll('[data-dur]').forEach(b=>b.onclick=()=>{const m=+b.dataset.dur;$('nH').value=Math.floor(m/60);$('nM').value=m%60});
+$('ncForm').addEventListener('submit',ev=>{
+  ev.preventDefault();
+  const date=$('nDate').value, type=$('nType').value, other=$('nOther').value.trim(), details=$('nDetails').value.trim();
+  const mins=(parseInt($('nH').value,10)||0)*60+(parseInt($('nM').value,10)||0);
+  const miss=[]; if(!date)miss.push('date'); if(type==='oth'&&!other)miss.push('what “Others” is'); if(!details)miss.push('details of the activity'); if(mins<=0)miss.push('a duration');
+  if(date&&date>todayStr) miss.push('a date that is not in the future');
+  if(mins>24*60) miss.push('a duration of 24 hours or less');
+  if(miss.length){$('nErr').textContent='Please enter '+miss.join(', ')+'.';return}
+  $('nErr').textContent='';
+  const rec={date,type,other:type==='oth'?other:'',details,mins,note:$('nNote').value.trim()};
+  const wasEdit=editing&&editing.kind==='non'&&state.nonclinical.find(e=>e.id===editing.id);
+  if(wasEdit) Object.assign(wasEdit,rec); else state.nonclinical.push({id:uid(),...rec});
+  if(wasEdit) endEdit();
+  save(); goToDate(date); reg='non'; $('regClin').setAttribute('aria-pressed',false); $('regNon').setAttribute('aria-pressed',true);
+  render();
+  $('nDetails').value='';$('nNote').value='';$('nOther').value='';
+  toast('nToast',`${wasEdit?'Updated':'Saved'}: ${byId(NONC,type).name} · ${fmtH(mins)}.`);
+});
+
+// collapsible entries list (remembered on this device)
+const ENT_KEY='fms-workload-entries-open';
+function setEntries(open,remember){
+  $('entToggle').setAttribute('aria-expanded',open); $('entBody').hidden=!open;
+  if(remember){try{localStorage.setItem(ENT_KEY,open?'1':'0')}catch(e){}}
+}
+(function(){let v=null;try{v=localStorage.getItem(ENT_KEY)}catch(e){} setEntries(v===null?true:v==='1',false)})();
+$('entToggle').onclick=()=>setEntries($('entToggle').getAttribute('aria-expanded')!=='true',true);
+
+// edit & delete
+let editing=null;
+function fmtDay(s){return new Date(s+'T00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}
+const MOBILE=()=>matchMedia('(max-width:960px)').matches;
+function setView(v){
+  const a=$('appView'); a.classList.toggle('view-log',v==='log'); a.classList.toggle('view-dash',v==='dash');
+  if(v==='dash') render();
+  if(MOBILE()) window.scrollTo(0,0);
+}
+$('toDash').onclick=()=>setView('dash');
+$('backLog').onclick=()=>setView('log');
+document.addEventListener('click',e=>{const b=e.target.closest('[data-cmin]');if(!b)return;$('cMin').value=b.dataset.cmin});
+function startEdit(id){
+  const c=state.clinical.find(e=>e.id===id), n=state.nonclinical.find(e=>e.id===id);
+  if(c){
+    editing={kind:'clin',id}; setTab('clin');
+    $('cDate').value=c.date; $('cType').value=c.type; $('cIC').value=c.ic4||'';
+    pendingDx=dxs(c).slice(); $('cDx').value=''; renderChips();
+    const r=document.querySelector(`input[name="cx"][value="${c.cx}"]`); if(r) r.checked=true;
+    if(c.calc){calc={t:c.calc.t,p:c.calc.p,r:c.calc.r};renderCalc();$('calc').open=true}else resetCalc(false);
+    $('cNote').value=c.note||''; $('cMin').value=+c.mins>0?c.mins:''; $('cErr').textContent='';
+    $('cEditTxt').textContent=`Editing case from ${fmtDay(c.date)}${c.ic4?` · ${c.ic4}`:''}`; $('cEdit').hidden=false; $('cSubmit').textContent='Update case';
+  } else if(n){
+    editing={kind:'non',id}; setTab('non');
+    $('nDate').value=n.date; $('nType').value=n.type; $('nOtherWrap').hidden=n.type!=='oth'; $('nOther').value=n.other||'';
+    $('nDetails').value=n.details; $('nH').value=Math.floor(n.mins/60); $('nM').value=n.mins%60; $('nNote').value=n.note||''; $('nErr').textContent='';
+    $('nEditTxt').textContent=`Editing ${byId(NONC,n.type)?.name||'activity'} from ${fmtDay(n.date)}`; $('nEdit').hidden=false; $('nSubmit').textContent='Update activity';
+  } else return;
+  setView('log'); render();
+  if(!MOBILE()) $('hLog').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'nearest'});
+}
+function endEdit(){
+  const k=editing&&editing.kind; editing=null;
+  $('cEdit').hidden=true; $('nEdit').hidden=true; $('cSubmit').textContent='Save case'; $('nSubmit').textContent='Save activity';
+  return k;
+}
+function clearClin(){resetCalc(false);$('cMin').value='';$('cIC').value='';$('cDx').value='';$('cNote').value='';$('cx1').checked=true;$('cErr').textContent='';pendingDx=[];renderChips();$('cDate').value=todayStr}
+function clearNon(){$('nDetails').value='';$('nNote').value='';$('nOther').value='';$('nErr').textContent='';$('nH').value=1;$('nM').value=0;$('nDate').value=todayStr}
+$('cCancel').onclick=()=>{endEdit();clearClin();render()};
+$('nCancel').onclick=()=>{endEdit();clearNon();render()};
+// switching form tab abandons an unsaved edit
+[['tabClin','clin'],['tabNon','non']].forEach(([id,k])=>$(id).addEventListener('click',()=>{if(editing&&editing.kind!==k){const was=endEdit();was==='clin'?clearClin():clearNon();render()}}));
+$('rows').addEventListener('click',ev=>{
+  const eb=ev.target.closest('[data-edit]'); if(eb){startEdit(eb.dataset.edit);return}
+  const b=ev.target.closest('[data-del]'); if(!b) return;
+  armed(b,'Confirm',()=>{const id=b.dataset.del;
+    if(editing&&editing.id===id){const k=endEdit();k==='clin'?clearClin():clearNon()}
+    state.clinical=state.clinical.filter(e=>e.id!==id);state.nonclinical=state.nonclinical.filter(e=>e.id!==id);save();render()});
+});
+
+// settings
+// quick edit of name & clinic from the header (entries are untouched)
+function openWho(){$('wName').value=state.profile?.name||'';$('wKK').value=state.profile?.kk||'';fillDist($('wDist'),state.profile?.district||'');$('wErr').textContent='';$('whoRow').hidden=true;$('whoForm').hidden=false;$('wName').focus()}
+function closeWho(){$('whoForm').hidden=true;$('whoRow').hidden=false}
+$('whoEdit').onclick=()=>{if(state.profile&&state.profile.fmsId)openSetup('switch');else openWho()};
+$('whoCancel').onclick=()=>{closeWho();$('whoEdit').focus()};
+$('whoForm').addEventListener('keydown',e=>{if(e.key==='Escape'){closeWho();$('whoEdit').focus()}});
+$('whoForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const n=$('wName').value.trim().replace(/\s+/g,' '),k=$('wKK').value.trim().replace(/\s+/g,' ');
+  if(!n||!k){$('wErr').textContent=!n?'Enter the name of the FMS.':'Enter the Klinik Kesihatan.';(!n?$('wName'):$('wKK')).focus();return}
+  state.profile={...(state.profile||{}),name:n,kk:k,district:$('wDist').value};reconcileId();save();closeWho();render();$('whoEdit').focus();
+});
+$('sName').addEventListener('change',e=>{const v=e.target.value.trim();if(v){state.profile.name=v;reconcileId();save();render()}});
+$('sKK').addEventListener('change',e=>{const v=e.target.value.trim();if(v){state.profile.kk=v;reconcileId();save();render()}});
+$('sTW').addEventListener('change',e=>{state.targets.weighted=Math.max(0,parseInt(e.target.value,10)||0);save();render()});
+$('sTH').addEventListener('change',e=>{state.targets.hours=Math.max(0,parseInt(e.target.value,10)||0);save();render()});
+
+function msg(t,bad){const m=$('backupMsg');m.textContent=t;m.style.color=bad?'var(--crit)':'var(--ok)'}
+async function copyText(t,okMsg){
+  const ta=$('backupText');ta.value=t;
+  try{await navigator.clipboard.writeText(t);msg(okMsg)}catch(e){ta.focus();ta.select();msg('Copying was blocked here. The text is selected below; copy it manually.',true)}
+}
+const q=s=>'"'+String(s??'').replace(/"/g,'""')+'"';
+$('copyJson').onclick=()=>copyText(JSON.stringify(state),'Backup copied. Keep it somewhere safe, such as a private note.');
+$('copyCsvC').onclick=()=>{const L=['date,activity,patient_id,diagnosis,complexity,multiplier,note,calc_score,calc_clinical,calc_coordination,calc_risk,minutes'].concat(state.clinical.slice().sort((a,b)=>a.date.localeCompare(b.date)).map(e=>[e.date,q(byId(CLIN,e.type)?.name),q(e.ic4),q(dxStr(e)),q((CX.find(c=>c.v===e.cx)||{}).name),e.cx,q(e.note),e.calc?e.calc.score:'',e.calc?e.calc.t:'',e.calc?e.calc.p:'',e.calc?e.calc.r:'',+e.mins>0?e.mins:''].join(',')));copyText(L.join('\n'),'Clinical CSV copied. Paste into Google Sheets or Excel.')};
+$('copyCsvN').onclick=()=>{const L=['date,activity,specify,details,minutes,note'].concat(state.nonclinical.slice().sort((a,b)=>a.date.localeCompare(b.date)).map(e=>[e.date,q(byId(NONC,e.type)?.name),q(e.other),q(e.details),e.mins,q(e.note)].join(',')));copyText(L.join('\n'),'Management CSV copied. Paste into Google Sheets or Excel.')};
+function restore(text){
+  try{const o=JSON.parse(text);if(!valid(o))throw 0;state=normalize(o);pendingDx=[];renderChips();save();showView();msg(`Restored ${o.clinical.length} cases and ${o.nonclinical.length} activities.`)}
+  catch(e){msg('That text is not a valid backup. Use the text from “Copy backup”.',true)}
+}
+$('restorePaste').onclick=()=>{const t=$('backupText').value.trim();if(!t){msg('Paste backup text into the box first.',true);return}restore(t)};
+$('fileIn').addEventListener('change',ev=>{const f=ev.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>restore(r.result);r.readAsText(f);ev.target.value=''});
+const keyC=e=>[e.date,e.type,e.ic4,dxs(e).map(dxKey).sort().join(';'),e.cx].join('|');
+const keyN=e=>[e.date,e.type,String(e.details).trim().toLowerCase(),e.mins].join('|');
+function merge(text){
+  let o;try{o=JSON.parse(text);if(!valid(o))throw 0;normalize(o)}catch(e){msg('That text is not a valid backup. Use the text from “Copy backup” or a saved backup file.',true);return}
+  o.dxList.forEach(d=>addToList(d));
+  const ids=new Set(state.clinical.map(e=>e.id).concat(state.nonclinical.map(e=>e.id)));
+  const kc=new Set(state.clinical.map(keyC)), kn=new Set(state.nonclinical.map(keyN));
+  let addC=0,addN=0,skip=0;
+  o.clinical.forEach(e=>{if(!e||!e.date)return; if(ids.has(e.id)||(e.ic4&&kc.has(keyC(e)))){skip++;return} state.clinical.push({...e,id:ids.has(e.id)?uid():e.id}); kc.add(keyC(e)); ids.add(e.id); addC++});
+  o.nonclinical.forEach(e=>{if(!e||!e.date)return; if(ids.has(e.id)||kn.has(keyN(e))){skip++;return} state.nonclinical.push({...e}); kn.add(keyN(e)); ids.add(e.id); addN++});
+  if(!state.profile&&o.profile) state.profile=o.profile;
+  save(); showView();
+  msg(`Merged: added ${addC} case${addC===1?'':'s'} and ${addN} activit${addN===1?'y':'ies'}${skip?`, skipped ${skip} already here`:''}.`);
+}
+$('mergePaste').onclick=()=>{const t=$('backupText').value.trim();if(!t){msg('Paste backup text into the box first.',true);return}merge(t)};
+$('mergeIn').addEventListener('change',ev=>{const f=ev.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>merge(r.result);r.readAsText(f);ev.target.value=''});
+$('wipe').onclick=function(){armed(this,'Confirm: erase everything',()=>{const keepUrl=state.sync&&state.sync.url;state=normalize(blank());if(keepUrl)state.sync={url:keepUrl};pendingDx=[];renderChips();save();$('settings').open=false;$('suName').value='';$('suPw').value='';showView()})};
+
+// phone: floating "Log work" button
+$('fab').onclick=()=>{setView('log');setTimeout(()=>{($('clinForm').hidden?$('nDetails'):$('cIC')).focus({preventScroll:true})},50)};
+// redraw chart at the new width when the screen size changes
+let lastW=0,rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{const w=$('chart').clientWidth;if(!$('appView').hidden&&Math.abs(w-lastW)>20){lastW=w;render()}},150)});
+
+async function getDownloads(){
+  try{if(window.claude&&window.claude.use){const d=await window.claude.use('downloads');if(d)return d}}catch(e){}
+  return {save:async({filename,data})=>{
+    const type=/\.xlsx$/i.test(filename)?'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':'application/json';
+    const ios=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+    if(ios&&navigator.canShare){
+      const file=new File([data],filename,{type});
+      if(navigator.canShare({files:[file]})){
+        try{await navigator.share({files:[file]});return {status:'saved'}}
+        catch(e){if(e&&e.name==='AbortError')throw {code:'declined'}}
+      }
+    }
+    const url=URL.createObjectURL(new Blob([data],{type}));
+    const a=document.createElement('a');a.href=url;a.download=filename;a.rel='noopener';document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),4000);return {status:'saved'};
+  }};
+}
+function xmsg(t,bad){const m=$('xMsg');m.textContent=t;m.style.color=bad?'var(--crit)':'var(--ok)'}
+const slug=s=>String(s||'').replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40);
+// ---- Excel export (dashboard + linked data sheets, built in the page; works offline) ----
+const XS={
+  title:{font:{b:1,sz:20,color:'23308A'}},
+  who:{font:{b:1,sz:12,color:'121735'}},
+  muted:{font:{sz:10,color:'575D7E'}},
+  note:{font:{i:1,sz:9,color:'575D7E'}},
+  section:{font:{b:1,sz:12,color:'FFFFFF'},fill:'23308A',align:{v:'center',indent:1}},
+  th:{font:{b:1,color:'121735'},fill:'E5E8F6',border:'bottom',align:{v:'center',wrap:1}},
+  thR:{font:{b:1,color:'121735'},fill:'E5E8F6',border:'bottom',align:{h:'right',v:'center',wrap:1}},
+  td:{border:'hair'}, tdI:{border:'hair',fmt:'0'}, td1:{border:'hair',fmt:'0.0'}, td2:{border:'hair',fmt:'0.00'}, tdP:{border:'hair',fmt:'0.0%'},
+  tdM:{border:'hair',fmt:'"×"0.0',align:{h:'right'}},
+  tdDay:{border:'hair',fmt:'ddd dd mmm',align:{h:'left'}}, tdMonth:{border:'hair',fmt:'mmm yyyy',align:{h:'left'}},
+  totL:{font:{b:1},border:'top'}, totI:{font:{b:1},border:'top',fmt:'0'}, tot1:{font:{b:1},border:'top',fmt:'0.0'}, tot2:{font:{b:1},border:'top',fmt:'0.00'}, totP:{font:{b:1},border:'top',fmt:'0.0%'},
+  kLab:{font:{b:1,sz:9,color:'575D7E'},fill:'FFF6D6',border:'tile',align:{v:'bottom',indent:1}},
+  kVal:{font:{b:1,sz:24,color:'121735'},fill:'FFF6D6',border:'tile',align:{h:'left',v:'center',indent:1},fmt:'0'},
+  kVal1:{font:{b:1,sz:24,color:'23308A'},fill:'FFF6D6',border:'tile',align:{h:'left',v:'center',indent:1},fmt:'0.0'},
+  kValX:{font:{b:1,sz:24,color:'121735'},fill:'FFF6D6',border:'tile',align:{h:'left',v:'center',indent:1},fmt:'"×"0.00'},
+  kValH:{font:{b:1,sz:24,color:'121735'},fill:'FFF6D6',border:'tile',align:{h:'left',v:'center',indent:1},fmt:'0.0'},
+  kFoot:{font:{sz:9,color:'575D7E'},fill:'FFF6D6',border:'tile',align:{v:'top',wrap:1,indent:1}},
+  dHead:{font:{b:1,color:'121735'},fill:'E5E8F6',border:'bottom',align:{v:'center',wrap:1}},
+  dDate:{fmt:'dd mmm yyyy',align:{h:'left',v:'top'}}, dAuto:{fmt:'0.0',fill:'F3F4FA',font:{color:'575D7E'},align:{v:'top'}}, dAuto2:{fmt:'0.00',fill:'F3F4FA',font:{color:'575D7E'},align:{v:'top'}}, dTop:{align:{v:'top'}}, dWrap:{align:{v:'top',wrap:1}}, dNum:{align:{v:'top'},fmt:'0.0'}, dNum2:{align:{v:'top'},fmt:'0.00'}, dInt:{align:{v:'top'},fmt:'0'}
+};
+const serial=s=>{const [y,m,d]=s.split('-').map(Number);return (Date.UTC(y,m-1,d)-Date.UTC(1899,11,30))/864e5};
+const serialYMD=(y,m,d)=>(Date.UTC(y,m-1,d)-Date.UTC(1899,11,30))/864e5;
+const HEX={c1:'23308A',c2:'C8102E',c3:'D4A106',x1:'9AA6E8',x15:'E2B21A',x2:'C8102E',raw:'9AA6E8',wtd:'23308A',nc:'D4A106',dx:'5C6FD1'};
+
+function buildWorkbook(scope){
+  const mi=monthInfo(), p=state.profile||{}, anon=$('xAnon').checked;
+  const inScope=e=>scope==='all'||e.date.startsWith(mi.prefix);
+  const C=state.clinical.filter(inScope).sort((a,b)=>a.date.localeCompare(b.date));
+  const N=state.nonclinical.filter(inScope).sort((a,b)=>a.date.localeCompare(b.date));
+  const fmtMonth=k=>{const [y,m]=k.split('-').map(Number);return `${MONTHS[m-1]} ${y}`};
+  const keys=[...new Set(C.map(e=>e.date.slice(0,7)).concat(N.map(e=>e.date.slice(0,7))))].sort();
+  const period=scope==='all'?(keys.length?`All months (${fmtMonth(keys[0])} – ${fmtMonth(keys[keys.length-1])})`:'All months'):`${MONTHS[vm]} ${vy}`;
+  const wb=XL.book();
+  const D=wb.sheet('Dashboard',{grid:false,fit:true,landscape:true,cols:[30,15,15,15,2.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5]});
+  const CL='Clinical', NC='Management';
+  const q=n=>`'${n}'`;
+  const mulCol=anon?'E':'F', cxCol=anon?'D':'E', timeCol=anon?'J':'L';
+  const LAST=14; // column N
+
+  // header
+  D.set(1,1,'FMS Workload Dashboard',XS.title).height(1,32);
+  D.set(2,1,[p.name,p.kk].filter(Boolean).join('  ·  '),XS.who).height(2,20);
+  D.set(3,1,`Period: ${period}     Generated: ${new Date().toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}${anon?'     Anonymised: patient identifiers and notes removed':''}`,XS.muted);
+  D.set(4,1,'To add entries in Excel: fill the next empty row on the Clinical or Management sheet. Dropdowns and tips guide each column; grey columns fill in automatically, and this dashboard updates. Top diagnoses refresh when you export again.',XS.note); D.height(4,18);
+
+  // layout helpers
+  let r=9;
+  const section=(title)=>{D.style(r,1,r,LAST,XS.section);D.set(r,1,title,XS.section);D.height(r,22);r+=2;};
+  const CH=15; // chart height in rows
+  const head=(row,labels)=>{labels.forEach((l,i)=>D.set(row,i+1,l,i===0?XS.th:XS.thR));D.height(row,30)};
+
+  // ---- Clinical work ----
+  section('CLINICAL WORK');
+  // table 1: by activity
+  const t1=r; head(t1,['Clinical activity','Raw cases','Weighted cases','Avg complexity']);
+  let tr=0,tw=0;
+  CLIN.forEach((t,i)=>{
+    const row=t1+1+i, es=C.filter(e=>e.type===t.id), raw=es.length, w=es.reduce((a,e)=>a+e.cx,0); tr+=raw; tw+=w;
+    D.set(row,1,t.name,XS.td);
+    D.set(row,2,{f:`COUNTIF(${q(CL)}!$B:$B,$A${row})`,v:raw},XS.tdI);
+    D.set(row,3,{f:`SUMIF(${q(CL)}!$B:$B,$A${row},${q(CL)}!$${mulCol}:$${mulCol})`,v:w},XS.td1);
+    D.set(row,4,{f:`IF(B${row}=0,0,C${row}/B${row})`,v:raw?w/raw:0},XS.td2);
+  });
+  const t1tot=t1+1+CLIN.length, a1=t1+1, b1=t1tot-1;
+  D.set(t1tot,1,'Total',XS.totL);
+  D.set(t1tot,2,{f:`SUM(B${a1}:B${b1})`,v:tr},XS.totI);
+  D.set(t1tot,3,{f:`SUM(C${a1}:C${b1})`,v:tw},XS.tot1);
+  D.set(t1tot,4,{f:`IF(B${t1tot}=0,0,C${t1tot}/B${t1tot})`,v:tr?tw/tr:0},XS.tot2);
+  D.set(t1tot+2,1,'Weighted = cases × complexity multiplier (×1, ×1.5, ×2).',XS.note);
+  D.chart({kind:'col',title:'Raw vs weighted cases by activity',legend:true,labels:true,labelFmt:'0.#',at:{c1:6,r1:t1,c2:LAST,r2:t1+CH-1},
+    cats:{ref:D.ref(a1,1,b1,1),vals:CLIN.map(t=>t.name)},
+    series:[{name:'Raw cases',nameRef:D.ref(t1,2),ref:D.ref(a1,2,b1,2),vals:CLIN.map(t=>C.filter(e=>e.type===t.id).length),color:HEX.raw},
+            {name:'Weighted cases',nameRef:D.ref(t1,3),ref:D.ref(a1,3,b1,3),vals:CLIN.map(t=>C.filter(e=>e.type===t.id).reduce((a,e)=>a+e.cx,0)),color:HEX.wtd}]});
+  r=t1+CH+1;
+
+  // table 2: complexity mix
+  const t2=r; head(t2,['Complexity','Multiplier','Cases','% of cases']);
+  const cxColors=[HEX.x1,HEX.x15,HEX.x2];
+  CX.forEach((x,i)=>{
+    const row=t2+1+i,n=C.filter(e=>e.cx===x.v).length;
+    D.set(row,1,x.name,XS.td); D.set(row,2,x.v,XS.tdM);
+    D.set(row,3,{f:`COUNTIF(${q(CL)}!$${cxCol}:$${cxCol},$A${row})`,v:n},XS.tdI);
+    D.set(row,4,{f:`IF($C$${t2+4}=0,0,C${row}/$C$${t2+4})`,v:tr?n/tr:0},XS.tdP);
+  });
+  D.set(t2+4,1,'Total',XS.totL); D.set(t2+4,2,'',XS.totL);
+  D.set(t2+4,3,{f:`SUM(C${t2+1}:C${t2+3})`,v:tr},XS.totI);
+  D.set(t2+4,4,{f:`IF(C${t2+4}=0,0,1)`,v:tr?1:0},XS.totP);
+  D.chart({kind:'doughnut',title:'Complexity mix',legend:true,labels:true,labelFmt:'0%',at:{c1:6,r1:t2,c2:LAST,r2:t2+CH-1},
+    cats:{ref:D.ref(t2+1,1,t2+3,1),vals:CX.map(x=>x.name)},
+    series:[{name:'Cases',nameRef:D.ref(t2,3),ref:D.ref(t2+1,3,t2+3,3),vals:CX.map(x=>C.filter(e=>e.cx===x.v).length),colors:cxColors}]});
+  r=t2+CH+1;
+
+  // table 3: top diagnoses
+  const dcount={}; C.forEach(e=>dxs(e).forEach(d=>{const k=dxKey(d);(dcount[k]=dcount[k]||{name:d,n:0,w:0}).n++;dcount[k].w+=e.cx}));
+  const dAll=Object.values(dcount).sort((a,b)=>b.n-a.n||a.name.localeCompare(b.name)), top=dAll.slice(0,10);
+  const t3=r; head(t3,['Top diagnoses','Cases','% of cases','']); D.style(t3,4,t3,4,XS.thR);
+  if(top.length){
+    top.forEach((d,i)=>{const row=t3+1+i;D.set(row,1,d.name,XS.td);D.set(row,2,d.n,XS.tdI);D.set(row,3,{f:`IF($B$${t1tot}=0,0,B${row}/$B$${t1tot})`,v:tr?d.n/tr:0},XS.tdP)});
+    D.set(t3+top.length+2,1,'A case with several diagnoses counts once under each. Full list on the Diagnoses sheet.',XS.note);
+    D.chart({kind:'bar',title:`Top ${top.length} diagnos${top.length===1?'is':'es'}`,legend:false,labels:true,reverse:true,gap:50,at:{c1:6,r1:t3,c2:LAST,r2:t3+CH-1},
+      cats:{ref:D.ref(t3+1,1,t3+top.length,1),vals:top.map(d=>d.name)},
+      series:[{name:'Cases',nameRef:D.ref(t3,2),ref:D.ref(t3+1,2,t3+top.length,2),vals:top.map(d=>d.n),color:HEX.dx}]});
+    r=t3+Math.max(CH,top.length+3)+1;
+  } else { D.set(t3+1,1,'No diagnoses logged in this period.',XS.note); r=t3+4; }
+
+  // ---- Management work ----
+  section('MANAGEMENT WORK');
+  const t4=r; head(t4,['Management activity','Sessions','Hours','']); D.style(t4,4,t4,4,XS.thR);
+  let tn=0,tm=0;
+  NONC.forEach((t,i)=>{
+    const row=t4+1+i,es=N.filter(e=>e.type===t.id),m=es.reduce((a,e)=>a+e.mins,0); tn+=es.length; tm+=m;
+    D.set(row,1,t.name,XS.td);
+    D.set(row,2,{f:`COUNTIF(${q(NC)}!$B:$B,$A${row})`,v:es.length},XS.tdI);
+    D.set(row,3,{f:`SUMIF(${q(NC)}!$B:$B,$A${row},${q(NC)}!$F:$F)`,v:+(m/60).toFixed(2)},XS.td1);
+  });
+  const t4tot=t4+1+NONC.length;
+  D.set(t4tot,1,'Total',XS.totL);
+  D.set(t4tot,2,{f:`SUM(B${t4+1}:B${t4tot-1})`,v:tn},XS.totI);
+  D.set(t4tot,3,{f:`SUM(C${t4+1}:C${t4tot-1})`,v:+(tm/60).toFixed(2)},XS.tot1);
+  D.chart({kind:'bar',title:'Management hours by activity',legend:false,labels:true,labelFmt:'0.0',reverse:true,gap:50,at:{c1:6,r1:t4,c2:LAST,r2:t4+CH-1},
+    cats:{ref:D.ref(t4+1,1,t4tot-1,1),vals:NONC.map(t=>t.name)},
+    series:[{name:'Hours',nameRef:D.ref(t4,3),ref:D.ref(t4+1,3,t4tot-1,3),vals:NONC.map(t=>+(N.filter(e=>e.type===t.id).reduce((a,e)=>a+e.mins,0)/60).toFixed(2)),color:HEX.nc}]});
+  r=t4+CH+1;
+
+  // ---- Trend ----
+  section(scope==='all'?'MONTHLY TREND':'DAILY ACTIVITY');
+  const t5=r; head(t5,[scope==='all'?'Month':'Date','Raw cases','Weighted cases','Management hours']);
+  const periods=[];
+  if(scope==='all'){
+    let [y,m]=(keys[0]||`${vy}-${pad(vm+1)}`).split('-').map(Number); const [ly,lm]=(keys[keys.length-1]||`${vy}-${pad(vm+1)}`).split('-').map(Number);
+    while(y<ly||(y===ly&&m<=lm)){periods.push({key:`${y}-${pad(m)}`,ser:serialYMD(y,m,1)}); m++; if(m>12){m=1;y++}}
+  } else {
+    for(let d=1;d<=mi.days;d++) periods.push({key:`${vy}-${pad(vm+1)}-${pad(d)}`,ser:serialYMD(vy,vm+1,d)});
+  }
+  const tv={raw:[],w:[],h:[]};
+  periods.forEach((pp,i)=>{
+    const row=t5+1+i, cs=C.filter(e=>e.date.startsWith(pp.key)), ns=N.filter(e=>e.date.startsWith(pp.key));
+    const raw=cs.length,w=cs.reduce((a,e)=>a+e.cx,0),h=+(ns.reduce((a,e)=>a+e.mins,0)/60).toFixed(2);
+    tv.raw.push(raw);tv.w.push(w);tv.h.push(h);
+    D.set(row,1,pp.ser,scope==='all'?XS.tdMonth:XS.tdDay);
+    if(scope==='all'){
+      const crit=`${q(CL)}!$A:$A,">="&$A${row},${q(CL)}!$A:$A,"<"&EDATE($A${row},1)`, critN=`${q(NC)}!$A:$A,">="&$A${row},${q(NC)}!$A:$A,"<"&EDATE($A${row},1)`;
+      D.set(row,2,{f:`COUNTIFS(${crit})`,v:raw},XS.tdI);
+      D.set(row,3,{f:`SUMIFS(${q(CL)}!$${mulCol}:$${mulCol},${crit})`,v:w},XS.td1);
+      D.set(row,4,{f:`SUMIFS(${q(NC)}!$F:$F,${critN})`,v:h},XS.td1);
+    } else {
+      D.set(row,2,{f:`COUNTIF(${q(CL)}!$A:$A,$A${row})`,v:raw},XS.tdI);
+      D.set(row,3,{f:`SUMIF(${q(CL)}!$A:$A,$A${row},${q(CL)}!$${mulCol}:$${mulCol})`,v:w},XS.td1);
+      D.set(row,4,{f:`SUMIF(${q(NC)}!$A:$A,$A${row},${q(NC)}!$F:$F)`,v:h},XS.td1);
+    }
+  });
+  const a5=t5+1,b5=t5+periods.length;
+  D.chart({kind:'col',title:scope==='all'?'Cases per month':'Cases per day',legend:true,labels:scope==='all'&&periods.length<=12,labelFmt:'0.#',gap:scope==='all'?70:40,
+    skip:scope==='all'?0:2,at:{c1:6,r1:t5,c2:LAST,r2:t5+CH+3},
+    cats:{num:true,fmt:scope==='all'?'mmm yy':'d',ref:D.ref(a5,1,b5,1),vals:periods.map(pp=>pp.ser)},
+    series:[{name:'Raw cases',nameRef:D.ref(t5,2),ref:D.ref(a5,2,b5,2),vals:tv.raw,color:HEX.raw},
+            {name:'Weighted cases',nameRef:D.ref(t5,3),ref:D.ref(a5,3,b5,3),vals:tv.w,color:HEX.wtd}]});
+
+  // ---- KPI tiles (linked to the tables) ----
+  const tgtW=scope==='month'?(+state.targets.weighted||0):0, tgtH=scope==='month'?(+state.targets.hours||0):0;
+  const tiles=[
+    {c1:1,c2:1,label:'RAW CASES',v:{f:`B${t1tot}`,v:tr},st:XS.kVal,foot:'Patients seen across all clinical activities'},
+    {c1:2,c2:3,label:'WEIGHTED CASES',v:{f:`C${t1tot}`,v:tw},st:XS.kVal1,foot:tgtW?`Monthly target: ${tgtW}`:'Raw cases × complexity multiplier'},
+    {c1:4,c2:7,label:'AVERAGE COMPLEXITY',v:{f:`IF(B${t1tot}=0,0,C${t1tot}/B${t1tot})`,v:tr?tw/tr:0},st:XS.kValX,foot:'×1 less · ×1.5 moderate · ×2 very complex'},
+    {c1:8,c2:11,label:'CLINICAL HOURS',v:{f:`SUM(${q(CL)}!$${timeCol}:$${timeCol})/60`,v:+(C.reduce((a,e)=>a+(+e.mins||0),0)/60).toFixed(2)},st:XS.kValH,foot:'From time spent logged on cases'},
+    {c1:12,c2:14,label:'MANAGEMENT HOURS',v:{f:`C${t4tot}`,v:+(tm/60).toFixed(2)},st:XS.kValH,foot:tgtH?`Monthly target: ${tgtH} h`:'Meetings, CME, audits, QA/QI and more'}
+  ];
+  tiles.forEach(t=>{
+    D.style(5,t.c1,5,t.c2,XS.kLab);D.style(6,t.c1,6,t.c2,t.st);D.style(7,t.c1,7,t.c2,XS.kFoot);
+    D.set(5,t.c1,t.label,XS.kLab);D.set(6,t.c1,t.v,t.st);D.set(7,t.c1,t.foot,XS.kFoot);
+    if(t.c2>t.c1){D.merge(5,t.c1,5,t.c2);D.merge(6,t.c1,6,t.c2);D.merge(7,t.c1,7,t.c2)}
+  });
+  D.height(5,22).height(6,38).height(7,30);
+
+  // ---- Clinical and Management sheets: ready for typing new entries (dropdowns, checks, automatic columns) ----
+  const L=n=>XL.col(n);
+  const CROWS=Math.max(C.length+300,500), NROWS=Math.max(N.length+200,300);
+  const DMIN=serialYMD(2015,1,1), DMAX=serialYMD(2040,12,31);
+  const S1=wb.sheet(CL,{freeze:2,cols:anon?[14,20,46,20,11,12,10,13,8,11]:[14,20,16,46,20,11,36,12,10,13,8,11],
+    colStyles:anon?[XS.dDate,XS.dTop,XS.dWrap,XS.dTop,null,null,XS.dInt,XS.dInt,XS.dInt,XS.dInt]:[XS.dDate,XS.dTop,XS.dTop,XS.dWrap,XS.dTop,null,XS.dWrap,null,XS.dInt,XS.dInt,XS.dInt,XS.dInt]});
+  const h1=(anon?['Date','Activity','Diagnoses','Complexity','Multiplier']:['Date','Activity','Patient identifier','Diagnoses','Complexity','Multiplier','Notes']).concat(['Calculator score','Clinical (1–5)','Coordination (1–5)','Risk (1–5)','Time (min)']);
+  const c1=n=>h1.indexOf(n)+1;
+  h1.forEach((h,i)=>S1.set(1,i+1,h,XS.dHead)); S1.height(1,30);
+  const cCx=L(c1('Complexity')), cT=L(c1('Clinical (1–5)')), cR=L(c1('Risk (1–5)'));
+  for(let row=2;row<=CROWS;row++){
+    const e=C[row-2];
+    if(e){
+      const t=byId(CLIN,e.type),x=CX.find(c=>c.v===e.cx)||{},k=e.calc||{};
+      const vals={'Date':serial(e.date),'Activity':t?t.name:e.type,'Patient identifier':String(e.ic4||''),'Diagnoses':dxStr(e),'Complexity':x.name||'','Notes':e.note||'',
+        'Clinical (1–5)':k.t||'','Coordination (1–5)':k.p||'','Risk (1–5)':k.r||'','Time (min)':+e.mins>0?+e.mins:''};
+      const sts={'Date':XS.dDate,'Diagnoses':XS.dWrap,'Notes':XS.dWrap,'Clinical (1–5)':XS.dInt,'Coordination (1–5)':XS.dInt,'Risk (1–5)':XS.dInt,'Time (min)':XS.dInt};
+      h1.forEach((h,j)=>{if(h in vals)S1.set(row,j+1,vals[h],sts[h]||XS.dTop)});
+    }
+    const mul=e?e.cx:'', sc=e&&e.calc?e.calc.score:'';
+    S1.set(row,c1('Multiplier'),{f:`IF(${cCx}${row}="Very complex",2,IF(${cCx}${row}="Moderately complex",1.5,IF(${cCx}${row}="Less complex",1,"")))`,v:mul},XS.dAuto);
+    S1.set(row,c1('Calculator score'),{f:`IF(COUNT(${cT}${row}:${cR}${row})=3,ROUND(${cT}${row}*0.4+${L(c1('Coordination (1–5)'))}${row}*0.3+${cR}${row}*0.3,1),"")`,v:sc},XS.dAuto);
+  }
+  S1.autofilter(1,1,CROWS,h1.length);
+  const rng=(n,last)=>`${L(c1(n))}2:${L(c1(n))}${last}`;
+  S1.validate(rng('Date',CROWS),{type:'date',min:DMIN,max:DMAX,title:'Date seen',prompt:'Type the date, e.g. 21/10/2026.',etitle:'Not a date',error:'Enter a date, e.g. 21/10/2026.'});
+  S1.validate(rng('Activity',CROWS),{type:'list',src:"Lists!$A$2:$A$4",title:'Clinical activity',prompt:'Pick from the list.',etitle:'Pick an activity',error:'Choose Case seen by FMS, MO consultation or Procedure.'});
+  if(!anon) S1.validate(rng('Patient identifier',CROWS),{type:'textLength',op:'lessThanOrEqual',min:20,title:'Patient identifier (optional)',prompt:'e.g. RN or last 4 of IC. Avoid full IC numbers or names.',etitle:'Too long',error:'Use 20 characters or fewer.'});
+  S1.validate(rng('Diagnoses',CROWS),{type:'list',src:`Lists!$D$2:$D$${Math.max(2,state.dxList.length+1)}`,strict:false,title:'Diagnoses',prompt:'Pick from your list or type your own. For several, separate with ; (e.g. T2DM; CKD stage 3b).'});
+  S1.validate(rng('Complexity',CROWS),{type:'list',src:"Lists!$B$2:$B$4",title:'Complexity',prompt:'Less complex ×1, Moderately complex ×1.5, Very complex ×2. Not sure? Fill the three 1–5 ratings and follow the score: below 2.5 less, 2.5–3.9 moderate, 4.0+ very.',etitle:'Pick a level',error:'Choose Less complex, Moderately complex or Very complex.'});
+  S1.validate(rng('Multiplier',CROWS),{type:'none',title:'Filled in automatically',prompt:'Worked out from Complexity. No need to type here.'});
+  S1.validate(rng('Calculator score',CROWS),{type:'none',title:'Filled in automatically',prompt:'0.4 × clinical + 0.3 × coordination + 0.3 × risk, once all three ratings are filled.'});
+  [['Clinical (1–5)','1 single stable condition … 5 several uncontrolled conditions or a serious diagnosis.'],['Coordination (1–5)','1 single consultation … 5 multi-agency coordination or case conference.'],['Risk (1–5)','1 low risk, stable … 5 unstable or emergency.']].forEach(([n,pr])=>
+    S1.validate(rng(n,CROWS),{type:'list',list:['1','2','3','4','5'],title:n+' (optional)',prompt:pr,etitle:'1 to 5',error:'Choose a number from 1 to 5.'}));
+  S1.validate(rng('Time (min)',CROWS),{type:'whole',min:0,max:600,title:'Time spent (optional)',prompt:'Minutes spent on this case.',etitle:'Minutes',error:'Enter whole minutes from 0 to 600.'});
+
+  const S2=wb.sheet(NC,{freeze:2,cols:anon?[14,18,20,50,13,14]:[14,18,20,50,13,14,30],colStyles:[XS.dDate,XS.dTop,XS.dTop,XS.dWrap,XS.dInt,null,XS.dWrap]});
+  const h2=['Date','Activity','Specify (Others)','Details','Duration (min)','Duration (hours)'].concat(anon?[]:['Notes']);
+  h2.forEach((h,i)=>S2.set(1,i+1,h,XS.dHead)); S2.height(1,30);
+  for(let row=2;row<=NROWS;row++){
+    const e=N[row-2];
+    if(e){const t=byId(NONC,e.type);
+      [serial(e.date),t?t.name:e.type,e.other||'',e.details,e.mins].forEach((v,j)=>S2.set(row,j+1,v,[XS.dDate,XS.dTop,XS.dTop,XS.dWrap,XS.dInt][j]));
+      if(!anon) S2.set(row,7,e.note||'',XS.dWrap);}
+    S2.set(row,6,{f:`IF(E${row}="","",E${row}/60)`,v:e?+(e.mins/60).toFixed(4):''},XS.dAuto2);
+  }
+  S2.autofilter(1,1,NROWS,h2.length);
+  S2.validate(`A2:A${NROWS}`,{type:'date',min:DMIN,max:DMAX,title:'Date',prompt:'Type the date, e.g. 21/10/2026.',etitle:'Not a date',error:'Enter a date, e.g. 21/10/2026.'});
+  S2.validate(`B2:B${NROWS}`,{type:'list',src:"Lists!$C$2:$C$8",title:'Activity',prompt:'Pick from the list. For Others, also fill Specify.',etitle:'Pick an activity',error:'Choose an activity from the list.'});
+  S2.validate(`C2:C${NROWS}`,{type:'none',title:'Specify (Others only)',prompt:'Only needed when Activity is Others, e.g. Community health talk.'});
+  S2.validate(`D2:D${NROWS}`,{type:'none',title:'Details (required)',prompt:'What the activity was, e.g. Monthly KK management meeting.'});
+  S2.validate(`E2:E${NROWS}`,{type:'whole',min:1,max:1440,title:'Duration in minutes',prompt:'e.g. 30, 60, 120. Half day = 240, full day = 480.',etitle:'Minutes',error:'Enter whole minutes from 1 to 1440.'});
+  S2.validate(`F2:F${NROWS}`,{type:'none',title:'Filled in automatically',prompt:'Hours, worked out from minutes.'});
+
+  // ---- Diagnoses sheet ----
+  const S3=wb.sheet('Diagnoses',{freeze:2,cols:[46,10,16,12]});
+  ['Diagnosis','Cases','Weighted cases','% of cases'].forEach((h,i)=>S3.set(1,i+1,h,XS.dHead)); S3.height(1,20);
+  dAll.forEach((d,i)=>{const row=i+2;S3.set(row,1,d.name,XS.dTop);S3.set(row,2,d.n,XS.dInt);S3.set(row,3,d.w,XS.dNum);S3.set(row,4,tr?d.n/tr:0,{fmt:'0.0%'})});
+  S3.autofilter(1,1,Math.max(2,dAll.length+1),4);
+
+  const SL=wb.sheet('Lists',{hidden:true,cols:[22,20,20,46,6]});
+  ['Clinical activities','Complexity','Management activities','Diagnoses','1–5'].forEach((h,i)=>SL.set(1,i+1,h,XS.dHead));
+  CLIN.forEach((t,i)=>SL.set(i+2,1,t.name)); CX.forEach((x,i)=>SL.set(i+2,2,x.name)); NONC.forEach((t,i)=>SL.set(i+2,3,t.name));
+  state.dxList.slice().sort((a,b)=>a.localeCompare(b)).forEach((d,i)=>SL.set(i+2,4,d)); [1,2,3,4,5].forEach((n,i)=>SL.set(i+2,5,n));
+
+  {const ord=['Dashboard','Clinical','Management','Diagnoses','Lists'];wb.sheets.sort((a,b)=>ord.indexOf(a.name)-ord.indexOf(b.name))}
+  return {data:wb.write(),fname:`FMS-Workload_${slug(p.name)||'FMS'}_${scope==='all'?'all-months':vy+'-'+pad(vm+1)}${anon?'_anonymised':''}.xlsx`};
+}
+async function downloadsBlockedReason(){
+  try{const pm=window.claude&&window.claude.use?await window.claude.use('permissions'):null;
+    if(pm){const st=await pm.state('downloads');
+      if(st==='denied') return 'Saving files is switched off for this page, probably after a “Don’t allow” earlier. Turn it back on from this page’s Permissions menu in Claude, then try again.';
+      if(st==='prompt'){const r=await pm.request(['downloads']);if(r&&r.downloads==='granted') return null}}
+  }catch(e){}
+  return 'This view of Claude can’t save files from the page. Use the FMS Workload website or offline copy to export Excel, or copy the entries below and paste them into Excel.';
+}
+function entriesTSV(scope){
+  const mi=monthInfo(), inScope=e=>scope==='all'||e.date.startsWith(mi.prefix), anon=$('xAnon').checked;
+  const clean=v=>String(v??'').replace(/[\t\r\n]+/g,' ');
+  const C=state.clinical.filter(inScope).sort((a,b)=>a.date.localeCompare(b.date));
+  const N=state.nonclinical.filter(inScope).sort((a,b)=>a.date.localeCompare(b.date));
+  const ch=['Date','Activity'].concat(anon?[]:['Patient identifier'],['Diagnoses','Complexity','Multiplier'],anon?[]:['Notes'],['Time (min)']);
+  const cl=C.map(e=>[e.date,byId(CLIN,e.type)?.name||e.type].concat(anon?[]:[e.ic4],[dxStr(e),(CX.find(c=>c.v===e.cx)||{}).name||'',e.cx],anon?[]:[e.note],[+e.mins>0?e.mins:'']).map(clean).join('\t'));
+  const nh=['Date','Activity','Specify (Others)','Details','Duration (min)','Duration (hours)'].concat(anon?[]:['Notes']);
+  const nl=N.map(e=>[e.date,byId(NONC,e.type)?.name||e.type,e.other||'',e.details,e.mins,(e.mins/60).toFixed(2)].concat(anon?[]:[e.note]).map(clean).join('\t'));
+  return ['CLINICAL',ch.join('\t')].concat(cl,['','MANAGEMENT',nh.join('\t')],nl).join('\n');
+}
+function showCopyFallback(scope,why){
+  const m=$('xMsg');m.innerHTML='';m.style.color='var(--crit)';
+  const t=document.createElement('span');t.textContent=why+' ';m.appendChild(t);
+  const b=document.createElement('button');b.type='button';b.className='btn sm';b.textContent='Copy entries for Excel';m.appendChild(b);
+  b.onclick=()=>{const text=entriesTSV(scope);
+    const done=()=>{m.textContent='Entries copied. In Excel, click cell A1 of an empty sheet and paste.';m.style.color='var(--ok)'};
+    const manual=()=>{const box=$('backupText');$('settings').open=true;box.value=text;box.focus();box.select();m.textContent='Copying was blocked. The entries are selected in the box under Settings: copy them and paste into Excel.'};
+    try{navigator.clipboard.writeText(text).then(done,manual)}catch(e){manual()}};
+}
+async function exportExcel(scope){
+  let dl=await getDownloads();
+  if(!dl){const why=await downloadsBlockedReason(); if(why){showCopyFallback(scope,why);return} dl=await getDownloads(); if(!dl){showCopyFallback(scope,'Saving files isn’t available here.');return}}
+  xmsg('Preparing Excel file…');
+  let out; try{out=buildWorkbook(scope)}catch(e){console.error(e);xmsg('Something went wrong building the Excel file. Copy a backup and tell Claude what happened.',true);return}
+  try{await dl.save({filename:out.fname,data:out.data});xmsg(`Excel file ready: ${out.fname}.`)}
+  catch(err){const c=err&&err.code;xmsg(c==='declined'?'Download cancelled.':c==='rate_limited'?'A download prompt is already open. Finish that one first.':'Excel download isn’t available here. Use the CSV copy in Settings instead.',c!=='declined')}
+}
+$('xMonth').onclick=()=>exportExcel('month');
+$('xAll').onclick=()=>exportExcel('all');
+// ---- Import an Excel file exported from this page (also after it was edited and re-saved in Excel) ----
+async function readZip(buf){
+  const u8=new Uint8Array(buf), dv=new DataView(buf); let eocd=-1;
+  for(let i=u8.length-22;i>=Math.max(0,u8.length-66000);i--){if(dv.getUint32(i,true)===0x06054b50){eocd=i;break}}
+  if(eocd<0) throw new Error('notzip');
+  const n=dv.getUint16(eocd+10,true); let p=dv.getUint32(eocd+16,true); const files={}, dec=new TextDecoder();
+  for(let k=0;k<n;k++){
+    if(dv.getUint32(p,true)!==0x02014b50) throw new Error('badzip');
+    const method=dv.getUint16(p+10,true), csize=dv.getUint32(p+20,true), nl=dv.getUint16(p+28,true), xl=dv.getUint16(p+30,true), cl=dv.getUint16(p+32,true), off=dv.getUint32(p+42,true);
+    const name=dec.decode(u8.subarray(p+46,p+46+nl));
+    files[name]={method,csize,off}; p+=46+nl+xl+cl;
+  }
+  async function text(name){
+    const f=files[name]; if(!f) return null;
+    const lnl=dv.getUint16(f.off+26,true), lxl=dv.getUint16(f.off+28,true), start=f.off+30+lnl+lxl, data=u8.slice(start,start+f.csize);
+    if(f.method===0) return dec.decode(data);
+    if(f.method===8){
+      if(typeof DecompressionStream==='undefined') throw new Error('nodeflate');
+      const out=await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer();
+      return dec.decode(out);
+    }
+    throw new Error('method');
+  }
+  return {files,text};
+}
+async function readWorkbook(buf){
+  const z=await readZip(buf), P=s=>new DOMParser().parseFromString(s,'application/xml');
+  const wbx=await z.text('xl/workbook.xml'); if(!wbx) throw new Error('notxlsx');
+  const relx=P(await z.text('xl/_rels/workbook.xml.rels')||'<x/>'), rels={};
+  [...relx.getElementsByTagName('Relationship')].forEach(r=>{let t=r.getAttribute('Target');t=t.startsWith('/')?t.slice(1):'xl/'+t;rels[r.getAttribute('Id')]=t});
+  const sst=[]; const ssx=await z.text('xl/sharedStrings.xml');
+  if(ssx) [...P(ssx).getElementsByTagName('si')].forEach(si=>sst.push([...si.getElementsByTagName('t')].map(t=>t.textContent).join('')));
+  const sheets={};
+  for(const sh of [...P(wbx).getElementsByTagName('sheet')]){
+    const rid=sh.getAttribute('r:id')||[...sh.attributes].find(a=>/(^|:)id$/.test(a.name)&&a.name!=='sheetId')?.value;
+    const path=rels[rid]; if(!path) continue;
+    const x=await z.text(path); if(!x) continue;
+    const rows=[]; let rIdx=0;
+    [...P(x).getElementsByTagName('row')].forEach(row=>{
+      rIdx=+(row.getAttribute('r')||rIdx+1); const cells=[]; let cIdx=0;
+      [...row.getElementsByTagName('c')].forEach(c=>{
+        const ref=c.getAttribute('r'); if(ref){const L=ref.match(/^[A-Z]+/)[0];cIdx=[...L].reduce((a,ch)=>a*26+ch.charCodeAt(0)-64,0)} else cIdx++;
+        const t=c.getAttribute('t'), v=c.getElementsByTagName('v')[0];
+        let val=null;
+        if(t==='s') val=v?sst[+v.textContent]??'':'';
+        else if(t==='inlineStr') val=[...c.getElementsByTagName('t')].map(e=>e.textContent).join('');
+        else if(t==='str'||t==='e') val=v?v.textContent:'';
+        else if(t==='b') val=v?v.textContent==='1':null;
+        else val=v&&v.textContent!==''?+v.textContent:null;
+        cells[cIdx-1]=val;
+      });
+      rows[rIdx-1]=cells;
+    });
+    sheets[sh.getAttribute('name')]=rows;
+  }
+  return sheets;
+}
+const MON3={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+function toYMD(v){
+  if(typeof v==='number'&&isFinite(v)&&v>20000&&v<80000){const d=new Date(Date.UTC(1899,11,30)+Math.round(v)*864e5);return `${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())}`}
+  const s=String(v??'').trim(); let m;
+  if((m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/))) return `${m[1]}-${pad(+m[2])}-${pad(+m[3])}`;
+  if((m=s.match(/^(\d{1,2})[\s\-\/]([A-Za-z]{3})[A-Za-z]*[\s\-\/,]+(\d{4})/))&&MON3[m[2].toLowerCase()]) return `${m[3]}-${pad(MON3[m[2].toLowerCase()])}-${pad(+m[1])}`;
+  if((m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/))) return `${m[3]}-${pad(+m[2])}-${pad(+m[1])}`; // dd/mm/yyyy (Malaysian format)
+  return null;
+}
+const normH=h=>String(h??'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+function colMap(header,wanted){const H=(header||[]).map(normH),out={};Object.entries(wanted).forEach(([k,names])=>{out[k]=H.findIndex(h=>names.some(n=>h===n||h.startsWith(n)))});return out}
+const findType=(list,name)=>{const n=normH(name);return (list.find(t=>normH(t.name)===n||t.id===n)||{}).id};
+function parseExport(sheets){
+  const res={clin:[],nc:[],skipped:0,profile:null,anon:false};
+  const cs=sheets['Clinical'], ns=sheets['Management']||sheets['Non-clinical'];
+  if(!cs&&!ns) throw new Error('nosheets');
+  if(cs){
+    const m=colMap(cs[0],{date:['date'],act:['activity'],pid:['patient identifier','ic last 4','ic'],dx:['diagnos'],cxn:['complexity'],mul:['multiplier'],note:['notes'],score:['calculator score'],t:['clinical 1 5'],p:['coordination 1 5'],r:['risk 1 5'],mins:['time min']});
+    res.anon=m.pid<0;
+    cs.slice(1).forEach(row=>{
+      if(!row||row.every(v=>v===null||v===''||v===undefined)) return;
+      const g=k=>m[k]>=0?row[m[k]]:null;
+      const date=toYMD(g('date')), type=findType(CLIN,g('act'));
+      if(!date||!type){res.skipped++;return}
+      let cx=+g('mul'); if(![1,1.5,2].includes(cx)){const x=CX.find(c=>normH(c.name)===normH(g('cxn')));cx=x?x.v:1}
+      const dx=String(g('dx')??'').split(/[;\n]/).map(s=>s.trim()).filter(Boolean);
+      const e={date,type,ic4:g('pid')==null?'':String(g('pid')).trim(),dx,cx,note:g('note')==null?'':String(g('note'))};
+      const mins=Math.round(+g('mins')); if(mins>0) e.mins=mins;
+      const t=+g('t'),p=+g('p'),r=+g('r');
+      if([t,p,r].every(v=>v>=1&&v<=5)){const sc=Math.round((t*.4+p*.3+r*.3)*10)/10; if(tierOf(sc)===cx) e.calc={t,p,r,score:sc}}
+      res.clin.push(e);
+    });
+  }
+  if(ns){
+    const m=colMap(ns[0],{date:['date'],act:['activity'],other:['specify'],details:['details'],min:['duration min'],hrs:['duration hours'],note:['notes']});
+    ns.slice(1).forEach(row=>{
+      if(!row||row.every(v=>v===null||v===''||v===undefined)) return;
+      const g=k=>m[k]>=0?row[m[k]]:null;
+      const date=toYMD(g('date')); let type=findType(NONC,g('act'));
+      if(!type&&g('act')) type='oth';
+      let mins=Math.round(+g('min')); if(!(mins>0)) mins=Math.round((+g('hrs')||0)*60);
+      const details=String(g('details')??'').trim();
+      if(!date||!type||!(mins>0)||!details){res.skipped++;return}
+      res.nc.push({date,type,other:type==='oth'?String(g('other')??g('act')??'').trim():'',details,mins,note:g('note')==null?'':String(g('note'))});
+    });
+  }
+  const d=sheets['Dashboard'];
+  if(d&&d[1]&&typeof d[1][0]==='string'){const parts=d[1][0].split('·').map(s=>s.trim()).filter(Boolean);if(parts.length>=2) res.profile={name:parts[0],kk:parts.slice(1).join(' · ')}}
+  return res;
+}
+// add only what isn't already here (identical entries are counted, so a file's own repeats are kept)
+const fullKeyC=e=>[e.date,e.type,(e.ic4||'').toLowerCase(),dxs(e).map(dxKey).sort().join(';'),e.cx,+e.mins||0,(e.note||'').trim()].join('|');
+const fullKeyN=e=>[e.date,e.type,(e.other||'').toLowerCase(),String(e.details).trim().toLowerCase(),e.mins,(e.note||'').trim()].join('|');
+function mergeImported(res){
+  const have=(arr,key)=>{const m=new Map();arr.forEach(e=>{const k=key(e);m.set(k,(m.get(k)||0)+1)});return m};
+  const hc=have(state.clinical,fullKeyC), hn=have(state.nonclinical,fullKeyN); let addC=0,addN=0,dup=0;
+  res.clin.forEach(e=>{const k=fullKeyC(e),n=hc.get(k)||0;if(n>0){hc.set(k,n-1);dup++;return}state.clinical.push({id:uid(),...e});e.dx.forEach(d=>addToList(d));addC++});
+  res.nc.forEach(e=>{const k=fullKeyN(e),n=hn.get(k)||0;if(n>0){hn.set(k,n-1);dup++;return}state.nonclinical.push({id:uid(),...e});addN++});
+  return {addC,addN,dup};
+}
+let undoImport=null;
+async function importExcelFile(f,say){
+  if(!/\.xls[xm]$/i.test(f.name)){say('Choose an Excel file (.xlsx or .xlsm) exported from FMS Workload.',true);return null}
+  let res;
+  try{res=parseExport(await readWorkbook(await f.arrayBuffer()))}
+  catch(e){
+    const why=e&&e.message;
+    say(why==='nosheets'?'This Excel file has no “Clinical” or “Management” sheet. Import works with files exported from FMS Workload.':
+        why==='nodeflate'?'This browser is too old to read edited Excel files. Update the browser, or import on a computer.':
+        'Couldn’t read this file. Make sure it is an .xlsx exported from FMS Workload.',true);
+    return null;
+  }
+  undoImport=JSON.stringify(state);
+  const r=mergeImported(res);
+  if(!(state.profile&&state.profile.name)&&res.profile) state.profile=res.profile;
+  save();
+  const parts=[`Added ${r.addC} case${r.addC===1?'':'s'} and ${r.addN} activit${r.addN===1?'y':'ies'}`];
+  if(r.dup) parts.push(`${r.dup} already here and skipped`);
+  if(res.skipped) parts.push(`${res.skipped} row${res.skipped===1?'':'s'} without a valid date, activity or duration skipped`);
+  say(parts.join('; ')+'.'+(res.anon&&r.addC?' This was an anonymised export, so the cases have no patient identifiers or notes.':''),false,true);
+  return r;
+}
+function impSay(t,bad,canUndo){const m=$('impMsg');m.innerHTML='';const s=document.createElement('span');s.textContent=t;m.appendChild(s);m.style.color=bad?'var(--crit)':'var(--ok)';
+  if(canUndo){const b=document.createElement('button');b.type='button';b.className='btn sm';b.textContent='Undo import';b.style.marginLeft='8px';
+    b.onclick=()=>{if(!undoImport)return;state=normalize(JSON.parse(undoImport));undoImport=null;save();render();m.textContent='Import undone.';m.style.color='var(--ok)'};m.appendChild(b)}}
+$('xlsIn').addEventListener('change',async ev=>{const f=ev.target.files[0];ev.target.value='';if(!f)return;impSay('Reading Excel file…');const r=await importExcelFile(f,impSay);if(r){const last=state.clinical.concat(state.nonclinical).map(e=>e.date).sort().pop();if(last&&(r.addC||r.addN))goToDate(last);render()}});
+
+let DLC=null,DLDONE=false;
+getDownloads().then(d=>{DLC=d;DLDONE=true}).catch(()=>{DLDONE=true});
+function copyBackup(text,say,box){
+  const manual=()=>{if(box){box.hidden=false;box.value=text;box.focus();box.select()}
+    say(box?'Copying was blocked. The backup text is selected below: copy it and paste it into Notes or a chat to yourself.':'Copying was blocked. Use “Copy backup” in Settings.',true)};
+  const ok=()=>{if(box){box.hidden=true}say('Backup copied. Paste it into Notes or a WhatsApp chat to yourself. To restore, paste it on the setup screen or in Settings.')};
+  try{ if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(ok,manual)} else manual() }catch(e){manual()}
+}
+async function saveBackup(say,box){
+  const text=JSON.stringify(state);
+  if(DLDONE&&!DLC){copyBackup(text,say,box);return}
+  const dl=DLDONE?DLC:await getDownloads();
+  if(!dl){copyBackup(text,say,box);return}
+  const fname=`FMS-Workload-backup_${slug(state.profile?.name)||'FMS'}_${todayStr}.json`;
+  try{await dl.save({filename:fname,data:JSON.stringify(state)});say(`Backup saved as ${fname}. Restore it with “Restore from file”.`)}
+  catch(err){if(err&&err.code==='declined'){say('Save cancelled.');return} copyBackup(JSON.stringify(state),say,box)}
+}
+$('saveJson').onclick=()=>saveBackup(msg,$('backupText'));
+$('warnSave').onclick=()=>saveBackup((t,bad)=>{const m=$('warnMsg');m.textContent=t;m.style.color=bad?'var(--crit)':'var(--ok)'},$('warnText'));
+$('suPasteBtn').onclick=()=>{
+  const t=$('suPaste').value.trim(), say=(x,bad)=>{$('suMsg').textContent=x;$('suMsg').style.color=bad?'var(--crit)':'var(--ok)'};
+  if(!t){say('Paste the backup text into the box first.',true);return}
+  let o;try{o=JSON.parse(t)}catch(e){o=null}
+  if(!valid(o)){say('That text isn’t a complete FMS Workload backup. Copy the whole backup and paste it again.',true);return}
+  restore(t); $('suPaste').value='';
+  if(!(state.profile&&state.profile.name)) say('Backup restored. Enter your name and clinic to continue.');
+};
+$('suRestore').addEventListener('change',async ev=>{
+  const f=ev.target.files[0]; ev.target.value=''; if(!f) return;
+  if(/\.xls[xm]$/i.test(f.name)){
+    const say=(t,bad)=>{$('suMsg').textContent=t;$('suMsg').style.color=bad?'var(--crit)':'var(--ok)'};
+    say('Reading Excel file…');
+    const r=await importExcelFile(f,say); if(!r) return;
+    if(state.profile&&state.profile.name){showView();render()}
+    else say(`Imported ${r.addC} cases and ${r.addN} activities. Enter your name and clinic to continue.`);
+    return;
+  }
+  const r=new FileReader();
+  r.onload=()=>{let o;try{o=JSON.parse(r.result)}catch(e){o=null}
+    if(!valid(o)){$('suMsg').textContent='That file isn’t an FMS Workload backup. Choose the .json file saved with “Save backup file”.';return}
+    $('suMsg').textContent=''; restore(r.result);
+    if(!(state.profile&&state.profile.name)){$('suMsg').textContent='Backup restored. Enter your name and clinic to continue.'}};
+  r.readAsText(f);
+});
+
+// ---- State sheet: sign in with your own password, send entries to your district sheet, get your log back ----
+// The device keeps a note of what it has sent (id -> fingerprint), so edits are re-sent, deletions are removed
+// from the sheet, and nothing is sent twice. Example entries, patient identifiers and notes are never sent.
+var SYNC_DEFAULT='https://script.google.com/macros/s/AKfycbwicWQZPkocbYozuC7tp1FJy9y3J9COPECGwh4nLAG7LMA2BrQimSA9dfpKS0cmUZ0u/exec'; // the state FMS's Apps Script web app link (ends in /exec); built into the page so FMS don't need to paste it
+var DISTRICTS=['Lembah Pantai','Cheras','Titiwangsa','Kepong','Putrajaya'];
+var ROSTER_EMBED=[{"id":"FMS01","name":"Dr Fatimah Zahrah binti Mohd Zaidan","district":"Lembah Pantai","kk":"KK Tanglin"},{"id":"FMS02","name":"Dr Radhiyah binti Hussin","district":"Lembah Pantai","kk":"KK Tanglin"},{"id":"FMS03","name":"Dr Mohd Hafizul Akmal bin Nordin","district":"Lembah Pantai","kk":"KK Tanglin"},{"id":"FMS04","name":"Dr Avni Patel","district":"Lembah Pantai","kk":"KK Tanglin"},{"id":"FMS05","name":"Dr Chitra Suluraju","district":"Lembah Pantai","kk":"KK Petaling Bahagia"},{"id":"FMS06","name":"Dr Nurul Irma binti Muhamad Tahir","district":"Lembah Pantai","kk":"KK Petaling Bahagia"},{"id":"FMS07","name":"Dr Amelia Teh Jay Yun","district":"Lembah Pantai","kk":"KK Petaling Bahagia"},{"id":"FMS08","name":"Dr Megat Muhammad Haris Megat Zainal","district":"Lembah Pantai","kk":"KK Muhibbah"},{"id":"FMS09","name":"Dr Lim Zhi Han Nicholas","district":"Lembah Pantai","kk":"KK Muhibbah"},{"id":"FMS10","name":"Dr Adam Firdaus Dahlan","district":"Cheras","kk":"KK Sungai Besi"},{"id":"FMS11","name":"Dr Thung Senk Chung","district":"Cheras","kk":"KK Sungai Besi"},{"id":"FMS12","name":"Dr Sailasri Basakran","district":"Cheras","kk":"KK Sungai Besi"},{"id":"FMS13","name":"Dr Sheela Bai Pannir Selvam","district":"Cheras","kk":"KK Cheras"},{"id":"FMS14","name":"Dr Anuar bin Mohamad","district":"Cheras","kk":"KK Cheras"},{"id":"FMS15","name":"Dr Wong Ping Foo","district":"Cheras","kk":"KK Cheras"},{"id":"FMS16","name":"Dr Syazwani binti Dzulkifli","district":"Cheras","kk":"KK Cheras"},{"id":"FMS17","name":"Dr Ain Sabrina binti Mohamed Amiruddin","district":"Cheras","kk":"KK Cheras Baru"},{"id":"FMS18","name":"Dr Rosanna Patricia Chryshanthi Gregory","district":"Cheras","kk":"KK Cheras Baru"},{"id":"FMS19","name":"Dr Nurzeiti Yuslinda Yusof","district":"Cheras","kk":"KK Bandar Tun Razak"},{"id":"FMS20","name":"Dr Nur Syarafina binti Abd Aziz","district":"Cheras","kk":"KK Bandar Tun Razak"},{"id":"FMS21","name":"Dr Anu Malar a/p Narkunam","district":"Cheras","kk":"KK Salak Selatan"},{"id":"FMS22","name":"Dr Roslinawati binti Mat Zin","district":"Titiwangsa","kk":"KK Dato Keramat"},{"id":"FMS23","name":"Dr Marina Antony Nicholson","district":"Titiwangsa","kk":"KK Dato Keramat"},{"id":"FMS24","name":"Dr Nur Syahida binti Saadon","district":"Titiwangsa","kk":"UTC Keramat"},{"id":"FMS25","name":"Dr Kow Fei Ping","district":"Titiwangsa","kk":"KK Kuala Lumpur"},{"id":"FMS26","name":"Dr Sathya Rao a/l Jogulu","district":"Titiwangsa","kk":"KK Kuala Lumpur"},{"id":"FMS27","name":"Dr Nagammai Thiagarajan","district":"Titiwangsa","kk":"KK Kuala Lumpur"},{"id":"FMS28","name":"Dr Azira Baharuddin","district":"Titiwangsa","kk":"KK Kuala Lumpur"},{"id":"FMS29","name":"Dr Mohd Amirul Amin bin Mohd Ghani","district":"Titiwangsa","kk":"KK Kuala Lumpur"},{"id":"FMS30","name":"Dr Nadiah binti Othman","district":"Titiwangsa","kk":"KK Kuala Lumpur"},{"id":"FMS31","name":"Dr Sheikh Shariman bin Sheikh Aminuddin","district":"Titiwangsa","kk":"KK Kuala Lumpur"},{"id":"FMS32","name":"Dr Leong Yin Hui","district":"Titiwangsa","kk":"KK Setapak"},{"id":"FMS33","name":"Dr Rafidah Mohd Rafie","district":"Titiwangsa","kk":"KK Setapak"},{"id":"FMS34","name":"Dr Suhaili Naim Mustapa","district":"Titiwangsa","kk":"KK Setapak"},{"id":"FMS35","name":"Dr Nik Farah binti Nik Yusof Fuad","district":"Titiwangsa","kk":"KK Kg Pandan"},{"id":"FMS36","name":"Dr Adilah binti Aidit","district":"Titiwangsa","kk":"KK Kg Pandan"},{"id":"FMS37","name":"Dr Ummul-Hani binti Shahanom","district":"Titiwangsa","kk":"KK Kg Pandan"},{"id":"FMS38","name":"Dr Nor Azlina Siddik","district":"Kepong","kk":"KK Jinjang"},{"id":"FMS39","name":"Dr Atiqah Asbi","district":"Kepong","kk":"KK Jinjang"},{"id":"FMS40","name":"Dr Sathia Kanawathy","district":"Kepong","kk":"KK Jinjang"},{"id":"FMS41","name":"Dr Jasmin 'Aqilah Zahari","district":"Kepong","kk":"KK Batu Muda"},{"id":"FMS42","name":"Dr Loke Yean Yee","district":"Kepong","kk":"KK Batu Muda"},{"id":"FMS43","name":"Dr Chan Hiang Ngee","district":"Kepong","kk":"KK Batu Muda"},{"id":"FMS44","name":"Dr Nurin binti Zainal","district":"Kepong","kk":"KK Sentul"},{"id":"FMS45","name":"Dr Rahmah binti Abdul Rahman","district":"Kepong","kk":"KK Sentul"},{"id":"FMS46","name":"Dr Valarmathi Masilamani","district":"Kepong","kk":"KK Sentul"},{"id":"FMS47","name":"Dr Noreen Ooi Zhi Min","district":"Kepong","kk":"KK Sentul"},{"id":"FMS48","name":"Dr Fatimah binti Ariff","district":"Kepong","kk":"KK Segambut"},{"id":"FMS49","name":"Dr Iliza binti Idris","district":"Putrajaya","kk":"KK Presint 18"},{"id":"FMS50","name":"Dr Hazira Hanum Mohd Yusof","district":"Putrajaya","kk":"KK Presint 18"},{"id":"FMS51","name":"Dr Nurzaitil Aswani Zainuddin","district":"Putrajaya","kk":"KK Presint 18"},{"id":"FMS52","name":"Dr Eleza Nazefah Rosli","district":"Putrajaya","kk":"KK Presint 18"},{"id":"FMS53","name":"Dr Nurainee binti Ibrahim","district":"Putrajaya","kk":"KK Presint 18"},{"id":"FMS54","name":"Dr Nor Azila binti Mohd Isa","district":"Putrajaya","kk":"KK Presint 9"},{"id":"FMS55","name":"Dr Noran binti Ramli","district":"Putrajaya","kk":"KK Presint 9"},{"id":"FMS56","name":"Dr Suriyati binti Draman","district":"Putrajaya","kk":"KK Presint 9"},{"id":"FMS57","name":"Dr Nurfarhana binti Khairul Zaman","district":"Putrajaya","kk":"KK Presint 9"},{"id":"FMS58","name":"Dr Suriani Sulaiman","district":"Putrajaya","kk":"KK Presint 9"},{"id":"FMS59","name":"Dr Alidahani Mohamad Yusof","district":"Putrajaya","kk":"KK Presint 11"}];
+var URL_RE=/^https:\/\/script\.google\.com\/(?:a\/macros\/[^\/?#\s]+|macros)\/s\/[\w-]+\/exec(?:\?[^#\s]*)?$/;
+var IN_CLAUDE=!!(window.claude&&window.claude.use);
+var syncing=false,syncTimer=null,syncAgain=false,rosterLoading=null,suMode='first',suNeedsCreate=false,suProbeId='';
+var DEVICE=(function(){const ua=navigator.userAgent||'';
+  const os=/iPhone/.test(ua)?'iPhone':/iPad/.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1)?'iPad':/Android/.test(ua)?'Android':/Mac OS X/.test(ua)?'Mac':/Windows/.test(ua)?'Windows':'Other';
+  const br=/Edg\//.test(ua)?'Edge':/Firefox\//.test(ua)?'Firefox':/Chrome\//.test(ua)?'Chrome':/Safari\//.test(ua)?'Safari':'Browser';
+  return os+' · '+br})();
+function syncObj(){if(!state.sync||typeof state.sync!=='object')state.sync={};const s=state.sync;if(!s.sent||typeof s.sent!=='object')s.sent={};return s}
+function syncUrl(){const u=String((state.sync&&state.sync.url)||SYNC_DEFAULT||'').trim();return URL_RE.test(u)?u:''}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+function fnv(s){let h=0x811c9dc5;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,0x01000193)}return (h>>>0).toString(36)}
+function reconcileId(){}
+function wire(e,kind){
+  return kind==='clin'
+    ?{kind,id:e.id,date:e.date,type:e.type,dx:dxs(e),cx:e.cx,mins:+e.mins>0?+e.mins:null,calc:e.calc?{t:e.calc.t,p:e.calc.p,r:e.calc.r,score:e.calc.score}:null}
+    :{kind,id:e.id,date:e.date,type:e.type,other:e.type==='oth'?(e.other||''):'',details:e.details||'',mins:e.mins};
+}
+function whoKey(p){return '|'+p.name+'|'+p.kk+'|'+(p.fmsId||'')}
+function pendingOps(){
+  const p=state.profile||{}, d=p.district, s=syncObj(), ops=[], live=new Set();
+  if(!d||!p.name||!p.fmsId) return ops;
+  const who=whoKey(p);
+  const add=(e,kind)=>{
+    if(!e||e.example||!e.id||!e.date) return; live.add(e.id);
+    const o=wire(e,kind), h=fnv(JSON.stringify(o)+who), was=s.sent[e.id];
+    if(was&&was.h===h&&was.d===d) return;
+    if(was&&was.d!==d) ops.push({op:'delete',kind:was.k,id:e.id,district:was.d});
+    ops.push(Object.assign({op:'upsert',district:d},o,{_h:h}));
+  };
+  state.clinical.forEach(e=>add(e,'clin')); state.nonclinical.forEach(e=>add(e,'mgmt'));
+  Object.keys(s.sent).forEach(id=>{if(!live.has(id)){const w=s.sent[id];ops.push({op:'delete',kind:w.k,id,district:w.d})}});
+  return ops;
+}
+async function postJSON(body){
+  const url=syncUrl(); if(!url) throw new Error('No state sheet link');
+  const res=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({app:'fms-workload',v:2},body)),redirect:'follow'});
+  try{return await res.json()}catch(e){throw new Error('The state sheet link did not reply properly. Check the link with the state FMS.')}
+}
+function netMsg(e){return IN_CLAUDE?'Signing in and sending work from the website or offline copy of this page, not inside Claude.':(navigator.onLine===false?'You are offline.':'Couldn’t reach the state sheet. Check your internet and try again.')}
+function scheduleSync(ms){clearTimeout(syncTimer);if(!syncUrl())return;syncTimer=setTimeout(()=>runSync(false),ms==null?1500:ms)}
+async function runSync(manual){
+  const url=syncUrl(), p=state.profile, s=syncObj();
+  if(!url||!p||!p.fmsId||!s.token){renderSync();return}
+  if(syncing){syncAgain=true;return}
+  if(navigator.onLine===false){s.err='offline';renderSync();return}
+  const all=pendingOps();
+  if(!all.length){s.err='';if(manual)s.last=Date.now();persist();renderSync();return}
+  syncing=true;renderSync();
+  try{
+    for(let i=0;i<all.length;i+=200){
+      const chunk=all.slice(i,i+200);
+      const j=await postJSON({action:'sync',fmsId:p.fmsId,fms:{id:p.fmsId,name:p.name,kk:p.kk,district:p.district},token:s.token,device:DEVICE,
+        ops:chunk.map(o=>{const c=Object.assign({},o);delete c._h;return c})});
+      if(j&&j.authError){s.token='';s.err='';break}
+      if(!j||!Array.isArray(j.done)) throw new Error((j&&j.error)||'The state sheet did not accept the entries.');
+      const done=new Set(j.done), ups=new Set(chunk.filter(o=>o.op==='upsert').map(o=>o.id));
+      chunk.filter(o=>o.op==='delete').forEach(o=>{if(done.has(o.id)&&!ups.has(o.id))delete s.sent[o.id]});
+      chunk.filter(o=>o.op==='upsert').forEach(o=>{if(done.has(o.id))s.sent[o.id]={h:o._h,d:o.district,k:o.kind}});
+      s.err=j.failed&&j.failed.length?`${j.failed.length} not accepted: ${String(j.failed[0].error).slice(0,120)}`:'';
+      s.last=Date.now();
+    }
+  }catch(e){s.err=IN_CLAUDE?'claude':String(e&&e.message||e).slice(0,160)}
+  finally{syncing=false;persist();renderSync();if(syncAgain){syncAgain=false;scheduleSync(400)}}
+}
+
+/* roster */
+function rosterList(){const r=state.sync&&state.sync.roster;return r&&Array.isArray(r.list)&&r.list.length?r.list:ROSTER_EMBED}
+function rosterHit(id){return id?rosterList().find(r=>r.id===id)||null:null}
+function districtList(){const r=state.sync&&state.sync.roster;return r&&Array.isArray(r.districts)&&r.districts.length?r.districts:DISTRICTS}
+function clinicsIn(d){return [...new Set(rosterList().filter(x=>x.district===d).map(x=>x.kk))].sort((a,b)=>a.localeCompare(b))}
+function namesIn(d,kk){return rosterList().filter(x=>x.district===d&&x.kk===kk).slice().sort((a,b)=>a.name.replace(/^Dr\.?\s+/i,'').localeCompare(b.name.replace(/^Dr\.?\s+/i,'')))}
+async function fetchRoster(){
+  const url=syncUrl(); if(!url) return null;
+  if(rosterLoading) return rosterLoading;
+  rosterLoading=(async()=>{
+    const r=await fetch(url+(url.includes('?')?'&':'?')+'action=roster',{redirect:'follow'});
+    const j=await r.json(); if(!j||!j.ok) throw new Error((j&&j.error)||'Name list not available');
+    syncObj().roster={at:Date.now(),list:Array.isArray(j.roster)?j.roster:[],districts:Array.isArray(j.districts)?j.districts:DISTRICTS};
+    // the roster is the source of truth for a signed-in FMS's name, clinic and district
+    const p=state.profile, hit=p&&rosterHit(p.fmsId);
+    if(hit&&(hit.name!==p.name||hit.kk!==p.kk||hit.district!==p.district)){Object.assign(p,{name:hit.name,kk:hit.kk,district:hit.district});persist();scheduleSync(500)}
+    persist(); return state.sync.roster;
+  })();
+  try{return await rosterLoading}finally{rosterLoading=null}
+}
+function fillDist(sel,cur){
+  const list=districtList().slice(); if(cur&&!list.includes(cur)) list.push(cur);
+  sel.innerHTML='<option value="">Choose district…</option>'+list.map(d=>`<option value="${esc(d)}">${esc(d)}</option>`).join('');
+  sel.value=cur||'';
+}
+
+/* setup / sign-in screen: district > clinic > name > password */
+function openSetup(mode){
+  suMode=mode; suNeedsCreate=false; suProbeId='';
+  const p=state.profile||{};
+  $('suKicker').textContent=mode==='switch'?'SIGN IN':'FIRST-TIME SETUP';
+  $('suCancel').hidden=mode!=='switch'; $('suExHint').hidden=mode==='switch';
+  $('suErr').textContent=''; $('suPw').value=''; $('suPw2').value='';
+  if(mode==='switch'||!$('suDist').value){
+    const hit=rosterHit(p.fmsId);
+    $('suDist').dataset.v=hit?hit.district:(p.district||''); $('suKKSel').dataset.v=hit?hit.kk:(p.kk||''); $('suPick').dataset.v=hit?hit.id:'';
+  }
+  fillSetup(true);
+  $('setupView').hidden=false; $('appView').hidden=true;
+  if(syncUrl()&&(!state.sync.roster||Date.now()-(state.sync.roster.at||0)>3600e3)) fetchRoster().then(()=>fillSetup(false)).catch(()=>{});
+  probePassword();
+  setTimeout(()=>{const f=['suDist','suKKSel','suPick'].find(id=>!$(id).value);($(f||'suPw')).focus()},0);
+}
+function fillSetup(fromData){
+  const keep=id=>fromData&&$(id).dataset.v!=null?$(id).dataset.v:$(id).value;
+  const d=keep('suDist'); fillDist($('suDist'),d);
+  const kk=keep('suKKSel'), clinics=d?clinicsIn(d):[];
+  $('suKKSel').innerHTML='<option value="">'+(d?'Choose clinic…':'Choose district first')+'</option>'+clinics.map(k=>`<option value="${esc(k)}">${esc(k)}</option>`).join('');
+  $('suKKSel').value=clinics.includes(kk)?kk:''; $('suKKSel').disabled=!d;
+  const k=$('suKKSel').value, pick=keep('suPick'), names=k?namesIn(d,k):[];
+  $('suPick').innerHTML='<option value="">'+(k?'Choose your name…':'Choose clinic first')+'</option>'+names.map(r=>`<option value="${esc(r.id)}">${esc(r.name)}</option>`).join('')+(k?'<option value="__none">My name isn’t listed</option>':'');
+  $('suPick').value=pick&&(pick==='__none'||names.some(r=>r.id===pick))?pick:''; $('suPick').disabled=!k;
+  ['suDist','suKKSel','suPick'].forEach(id=>delete $(id).dataset.v);
+  const v=$('suPick').value, roster=v&&v!=='__none', url=syncUrl();
+  $('suNameWrap').hidden=v!=='__none';
+  $('suPwWrap').hidden=!(url&&roster);
+  $('suNoSync').hidden=!(roster&&!url);
+  $('suPw2Wrap').hidden=!suNeedsCreate;
+  $('suPwLbl').innerHTML=(suNeedsCreate?'Create your password':'Password')+' <span class="req">*</span>';
+  $('suPw').autocomplete=suNeedsCreate?'new-password':'current-password';
+  $('suPwHint').textContent=suNeedsCreate
+    ?'First time signing in. Choose your own password (at least 6 characters). You’ll use it to sign in again and get your log back if this page resets or you change phones.'
+    :'Your own password. Forgot it? Ask the state FMS to reset it, then create a new one here.';
+  $('suGo').textContent=url&&roster?(suNeedsCreate?'Create password and start':'Sign in'):(suMode==='switch'?'Save':'Start my workload log');
+  $('suIntro').textContent=url
+    ?'Log clinical cases with complexity weighting and management work by time. Entries are saved on this device and sent to your district’s sheet for the state FMS. Patient identifiers and notes stay on this device.'
+    :'Log clinical cases with complexity weighting and management work by time. Entries are saved in this browser on this device.';
+  $('suLinkBox').hidden=!!SYNC_DEFAULT; const su=$('suUrl'); if(document.activeElement!==su) su.value=(state.sync&&state.sync.url)||'';
+}
+async function probePassword(){
+  const v=$('suPick').value; if(!syncUrl()||!v||v==='__none'||v===suProbeId) return;
+  suProbeId=v;
+  try{const j=await postJSON({action:'login',fmsId:v,password:''});
+    if($('suPick').value!==v) return;
+    suNeedsCreate=!!j.needsPassword; fillSetup(false);
+    if(j.error&&!j.needsPassword&&!j.hasPassword) $('suErr').textContent=j.error;
+  }catch(e){suProbeId=''}
+}
+['suDist','suKKSel'].forEach(id=>$(id).addEventListener('change',()=>{suNeedsCreate=false;suProbeId='';$('suErr').textContent='';fillSetup(false)}));
+$('suPick').addEventListener('change',()=>{suNeedsCreate=false;$('suErr').textContent='';fillSetup(false);probePassword();if($('suPick').value==='__none')$('suName').focus();else if(!$('suPwWrap').hidden)$('suPw').focus()});
+$('suShowPw').addEventListener('change',e=>{$('suPw').type=$('suPw2').type=e.target.checked?'text':'password'});
+$('suCancel').onclick=()=>{$('setupView').hidden=true;$('appView').hidden=false;render()};
+$('suUrl').addEventListener('change',e=>{const v=e.target.value.trim();
+  if(v&&!URL_RE.test(v)){$('suErr').textContent='That isn’t a state sheet link. It should start with https://script.google.com/ and end with /exec.';return}
+  syncObj().url=v;persist();$('suErr').textContent='';suProbeId='';fillSetup(false);if(v)fetchRoster().then(()=>{fillSetup(false);probePassword()}).catch(()=>{});else fillSetup(false)});
+async function submitSetup(){
+  const err=t=>{$('suErr').textContent=t;return false};
+  const d=$('suDist').value, kk=$('suKKSel').value, v=$('suPick').value, url=syncUrl();
+  if(!d){$('suDist').focus();return err('Choose your district.')}
+  if(!kk){$('suKKSel').focus();return err('Choose your clinic.')}
+  if(!v){$('suPick').focus();return err('Choose your name.')}
+  const prev=state.profile;
+  if(v==='__none'){
+    const name=$('suName').value.trim().replace(/\s+/g,' ');
+    if(!name){$('suName').focus();return err('Enter your name.')}
+    state.profile={name,kk,district:d,manual:true}; delete syncObj().token;
+    save(); showView(); return;
+  }
+  const r=rosterHit(v);
+  if(!url){ state.profile={name:r.name,kk:r.kk,district:r.district,fmsId:r.id}; save(); showView(); return; }
+  // switching to another FMS on this device: don't lose that FMS's unsent entries
+  if(prev&&prev.fmsId&&prev.fmsId!==r.id){
+    const n=pendingOps().length;
+    if(n) return err(`This device has ${n} entr${n===1?'y':'ies'} for ${prev.name} not yet sent. Ask them to sign in and send, or save a backup, before switching.`);
+  }
+  const pw=$('suPw').value;
+  if(suNeedsCreate){
+    if(pw.length<6){$('suPw').focus();return err('Use at least 6 characters for your password.')}
+    if(pw!==$('suPw2').value){$('suPw2').focus();return err('The two passwords don’t match.')}
+  } else if(!pw){$('suPw').focus();return err('Enter your password.')}
+  $('suGo').disabled=true; const label=$('suGo').textContent; $('suGo').textContent='Signing in…'; err('');
+  let j;
+  try{ j=await postJSON({action:'login',fmsId:r.id,password:pw,create:suNeedsCreate}); }
+  catch(e){ $('suGo').disabled=false; $('suGo').textContent=label; return err(netMsg(e)); }
+  $('suGo').disabled=false; $('suGo').textContent=label;
+  if(j.needsPassword){ suNeedsCreate=true; fillSetup(false); $('suPw2').value=''; $('suPw').focus(); return err(j.error||'First time signing in: create your own password.'); }
+  if(!j.ok){ $('suPw').select(); return err(j.error||'Could not sign in.'); }
+  const got=applyLogin(j, prev);
+  $('suPw').value=''; $('suPw2').value='';
+  showView();
+  toast('cToast', j.created?'Password created. You’re signed in.':(got?`Signed in. Restored ${got} entr${got===1?'y':'ies'} from the state sheet.`:'Signed in.'));
+}
+function applyLogin(j,prev){
+  const f=j.fms, s=syncObj();
+  if(prev&&prev.fmsId&&prev.fmsId!==f.id){ state.clinical=state.clinical.filter(e=>e.example); state.nonclinical=state.nonclinical.filter(e=>e.example); s.sent={}; }
+  state.profile={name:f.name,kk:f.kk,district:f.district,fmsId:f.id};
+  s.token=j.token; s.err='';
+  const who=whoKey(state.profile), have=new Set(state.clinical.map(e=>e.id).concat(state.nonclinical.map(e=>e.id)));
+  let got=0; const E=j.entries||{};
+  (E.clinical||[]).forEach(e=>{ if(!e||!e.id||!e.date) return;
+    if(!have.has(e.id)){ const rec={id:e.id,date:e.date,type:e.type,ic4:'',dx:Array.isArray(e.dx)?e.dx:[],cx:+e.cx||1,note:''};
+      if(+e.mins>0) rec.mins=+e.mins; if(e.calc) rec.calc=e.calc;
+      state.clinical.push(rec); rec.dx.forEach(d=>addToList(d)); got++;
+      s.sent[e.id]={h:fnv(JSON.stringify(wire(rec,'clin'))+who),d:f.district,k:'clin'}; } });
+  (E.management||[]).forEach(e=>{ if(!e||!e.id||!e.date) return;
+    if(!have.has(e.id)){ const rec={id:e.id,date:e.date,type:e.type,other:e.other||'',details:e.details||'',mins:+e.mins||0,note:''};
+      state.nonclinical.push(rec); got++;
+      s.sent[e.id]={h:fnv(JSON.stringify(wire(rec,'mgmt'))+who),d:f.district,k:'mgmt'}; } });
+  save();
+  return got;
+}
+function renderSync(){
+  const url=syncUrl(), p=state.profile||{}, s=syncObj(), el=$('syncState');
+  const n=url&&p.fmsId?pendingOps().length:0, signed=!!(p.fmsId&&s.token);
+  let cls='',txt='';
+  if(url&&p.name){
+    if(p.manual||!p.fmsId){cls='wait';txt='Not on the state list: entries stay on this device.'}
+    else if(!s.token){cls='wait';txt=`Not signed in${n?`: ${n} waiting to send`:''}. Sign in to send to the state sheet.`}
+    else if(syncing){cls='wait';txt='Sending to state sheet…'}
+    else if(s.err==='claude'){cls='bad';txt='Sending to the state sheet works from the website or offline copy, not inside Claude.'}
+    else if(s.err==='offline'){cls='wait';txt=`Offline: ${n} waiting. Sends when you're back online.`}
+    else if(s.err){cls='bad';txt=`State sheet: ${n} waiting. ${s.err}`}
+    else if(n){cls='wait';txt=`State sheet: ${n} waiting to send.`}
+    else txt='Sent to state sheet'+(s.last?' · '+new Date(s.last).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'');
+  }
+  el.className='savestate'+(txt?(cls?' '+cls:''):' off'); $('syncText').textContent=txt;
+  $('linkBanner').hidden=!(url&&p.name&&!p.manual&&!signed);
+  $('linkTxt').innerHTML=p.fmsId
+    ?'<strong>Sign in to the state sheet.</strong> Your entries are sent to your district’s sheet, and you can get your log back if this page resets.'
+    :'<strong>Connect to the state sheet.</strong> Pick your district, clinic and name, and set your own password.';
+  $('whoEdit').textContent=p.fmsId?'Switch':'Edit'; $('whoEdit').setAttribute('aria-label',p.fmsId?'Sign in as a different FMS':'Edit name and Klinik Kesihatan');
+  ['sName','sKK'].forEach(id=>{$(id).disabled=!!p.fmsId});
+  // settings
+  $('syncSec').hidden=!url&&!SYNC_DEFAULT&&!(state.sync&&state.sync.url)&&IN_CLAUDE;
+  $('sAcct').innerHTML=!url?'No state sheet link on this device. Entries stay here.'
+    :signed?`Signed in as <strong>${esc(p.name)}</strong> · ${esc(p.kk)} · ${esc(p.district)}`
+    :p.fmsId?`Not signed in. Entries for <strong>${esc(p.name)}</strong> are kept on this device until you sign in.`:'Not signed in.';
+  $('sSync').hidden=!signed; $('sSignIn').hidden=!url||signed; $('sSignOut').hidden=!signed; $('sPwBox').hidden=!signed;
+  const su=$('sUrl'); if(document.activeElement!==su) su.value=(state.sync&&state.sync.url)||'';
+  su.placeholder=SYNC_DEFAULT?'Using the built-in link':'https://script.google.com/macros/s/…/exec';
+}
+$('linkGo').onclick=()=>openSetup('switch');
+$('sSignIn').onclick=()=>openSetup('switch');
+$('sSignOut').onclick=function(){
+  const n=pendingOps().length;
+  armed(this,n?`Confirm: ${n} unsent will be lost`:'Confirm: sign out',()=>{
+    const s=syncObj(), keep={url:s.url,roster:s.roster};
+    state=normalize(blank()); state.sync=keep; pendingDx=[]; renderChips(); save(); $('settings').open=false; showView();
+  });
+};
+$('sPwGo').onclick=async()=>{
+  const m=$('sPwMsg'), say=(t,bad)=>{m.textContent=t;m.style.color=bad?'var(--crit)':'var(--ok)'};
+  const p=state.profile||{}, s=syncObj(), o=$('sPwOld').value, nw=$('sPwNew').value;
+  if(!o) return say('Enter your current password.',true);
+  if(nw.length<6) return say('Use at least 6 characters for the new password.',true);
+  try{const j=await postJSON({action:'password',fmsId:p.fmsId,token:s.token,password:o,newPassword:nw});
+    if(j.authError){s.token='';persist();renderSync();return say('Please sign in again.',true)}
+    if(!j.ok) return say(j.error||'Could not change the password.',true);
+    $('sPwOld').value='';$('sPwNew').value='';say('Password changed. Other devices will need to sign in again.');
+  }catch(e){say(netMsg(e),true)}
+};
+$('sUrl').addEventListener('change',e=>{
+  const v=e.target.value.trim(), m=$('sSyncMsg');
+  if(v&&!URL_RE.test(v)){m.textContent='That isn’t a state sheet link. It should start with https://script.google.com/ and end with /exec.';m.style.color='var(--crit)';return}
+  const s=syncObj(); if(v!==s.url){s.url=v;delete s.token;} persist(); m.style.color='var(--ok)'; m.textContent=v?'Link saved. Sign in to start sending.':'Link removed. Entries stay on this device.';
+  if(v) fetchRoster().catch(()=>{});
+  render();
+});
+$('sSync').onclick=()=>{$('sSyncMsg').textContent='';runSync(true)};
+window.addEventListener('online',()=>scheduleSync(300));
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')scheduleSync(800)});
+// a link shared as ...index.html?sync=<state sheet link> sets the link on this device
+(function(){try{const q=new URLSearchParams(location.search).get('sync');if(q&&URL_RE.test(q)){syncObj().url=q;persist();const u=new URL(location.href);u.searchParams.delete('sync');history.replaceState(null,'',u.toString())}}catch(e){}})();
+
+showView();
+lastW=$('chart').clientWidth;
+// Home Screen app: offline cache, keep storage, install tip
+(function(){
+  const standalone=(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true;
+  const ios=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  let hidden=false; try{hidden=localStorage.getItem('fms-install-hint')==='hide'}catch(e){}
+  $('installHint').hidden=!(ios&&!standalone&&!hidden);
+  $('installHide').onclick=()=>{$('installHint').hidden=true;try{localStorage.setItem('fms-install-hint','hide')}catch(e){}};
+  if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost')) navigator.serviceWorker.register('sw.js').catch(()=>{});
+  if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{});
+})();
+scheduleSync(1200);
+if(syncUrl()) fetchRoster().then(()=>{if(!$('appView').hidden)render()}).catch(()=>{});
+})();
+</script>
+</body>
+</html>
