@@ -137,6 +137,12 @@ header.top{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:end;justify-con
 
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;padding:3px;background:var(--sunk);gap:2px;flex-wrap:wrap}
 .seg button{border:0;background:transparent;border-radius:7px;padding:5px 12px;font-weight:600;color:var(--muted);font-size:.9rem}
+.lvlist{border-top:1px solid var(--line);padding-top:10px;display:grid;gap:6px}
+.lvlist h3{margin:0;font-size:.85rem}
+#lvList{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+#lvList li{display:flex;gap:8px;align-items:center;justify-content:space-between;font-size:.88rem;border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--bg)}
+#lvList .lt{display:grid;gap:1px;min-width:0}
+#lvList .lt small{color:var(--muted)}
 .seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
 
 form.log{display:grid;gap:12px}
@@ -478,6 +484,7 @@ td.act .acts{display:inline-flex;gap:6px}
           <div class="seg" role="group" aria-label="Entry type">
             <button type="button" id="tabClin" aria-pressed="true">Clinical</button>
             <button type="button" id="tabNon" aria-pressed="false">Admin / Others</button>
+            <button type="button" id="tabLv" aria-pressed="false">Leave / Away</button>
           </div>
         </div>
 
@@ -573,6 +580,25 @@ td.act .acts{display:inline-flex;gap:6px}
           <div class="err" id="nErr" aria-live="polite"></div>
           <button class="btn primary" type="submit" id="nSubmit">Save activity</button>
           <div class="toast" id="nToast" aria-live="polite"></div>
+        </form>
+
+        <form class="log" id="lvForm" novalidate hidden>
+          <p class="hint">Days away from clinic, so the state FMS can count your real clinical days. Public holidays and weekends are taken off automatically. Reasons are not asked.</p>
+          <div class="field"><label for="lvType">Type <span class="req">*</span></label><select id="lvType" required></select></div>
+          <div class="field" id="lvPartWrap"><label for="lvPart">Full or half day</label>
+            <select id="lvPart"><option value="full">Full day</option><option value="am">Half day (morning)</option><option value="pm">Half day (afternoon)</option></select></div>
+          <div class="row2">
+            <div class="field"><label for="lvFrom" id="lvFromLbl">From <span class="req">*</span></label><input type="date" id="lvFrom" required></div>
+            <div class="field" id="lvToWrap"><label for="lvTo">To <span class="req">*</span></label><input type="date" id="lvTo" required></div>
+          </div>
+          <div class="field" id="lvHoursWrap" hidden><label for="lvHours">Hours worked <span class="req">*</span></label>
+            <div class="durwrap" style="max-width:10em"><input type="number" id="lvHours" min="0.5" max="24" step="0.5" value="4" inputmode="decimal"><span>hr</span></div>
+            <span class="hint">Extended hours or weekend clinic count as extra clinical time.</span></div>
+          <p class="hint" id="lvHint"></p>
+          <div class="err" id="lvErr" aria-live="polite"></div>
+          <button class="btn primary" type="submit" id="lvSubmit">Save</button>
+          <div class="toast" id="lvToast" aria-live="polite"></div>
+          <div class="lvlist"><h3 class="small" id="lvListHead">Leave and away this month</h3><ul id="lvList"></ul></div>
         </form>
         <div class="savestate" id="saveState"><span class="dot"></span><span id="saveText">Saved on this device</span></div>
         <div class="savestate off" id="syncState" aria-live="polite"><span class="dot"></span><span id="syncText"></span></div>
@@ -939,7 +965,7 @@ const byId=(arr,id)=>arr.find(x=>x.id===id);
 
 function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
-function blank(){return {version:2,profile:null,targets:{weighted:0,hours:0},clinical:[],nonclinical:[]}}
+function blank(){return {version:2,profile:null,targets:{weighted:0,hours:0},clinical:[],nonclinical:[],leave:[]}}
 function examples(){
   const r=rng(11),today=new Date(),clin=[],nc=[];
   const pick=a=>a[Math.floor(r()*a.length)];
@@ -985,7 +1011,7 @@ function parseTags(s){return String(s||'').split(/[;\n]/).map(x=>x.trim()).filte
   const k=x.toLowerCase();for(const g of ['OPD','MCH'])for(const n of CT_BASE[g])if(n.toLowerCase()===k)return g+': '+n;return 'OPD: '+x})}
 const dxKey=s=>String(s).trim().toLowerCase();
 function normalize(s){
-  s.targets=s.targets||{weighted:0,hours:0};
+  s.targets=s.targets||{weighted:0,hours:0}; if(!Array.isArray(s.leave)) s.leave=[];
   s.clinical.forEach(e=>{e.dx=dxs(e);if(![1,1.5,2].includes(+e.cx))e.cx=1});
   if(!Array.isArray(s.dxList)) s.dxList=DX.concat(PROC);
   const seen=new Set(s.dxList.map(dxKey));
@@ -1038,6 +1064,7 @@ $('setupForm').addEventListener('submit',ev=>{ev.preventDefault();submitSetup()}
 function render(){
   const mi=monthInfo(), p=state.profile||{};
   renderCt();
+  if(!$('lvForm').hidden) renderLeave();
   $('who').innerHTML=`<strong>${esc(p.name)}</strong> · ${esc(p.kk)}${p.district?` · ${esc(p.district)}`:''}`;
   $('monthLabel').textContent=MONTHS[vm]+' '+vy;
   const hasEx=state.clinical.some(e=>e.example)||state.nonclinical.some(e=>e.example);
@@ -1234,10 +1261,53 @@ $('loadExamples').onclick=()=>{const ex=examples();state.clinical=state.clinical
 
 // entry tabs
 function setTab(t){
-  $('tabClin').setAttribute('aria-pressed',t==='clin');$('tabNon').setAttribute('aria-pressed',t==='non');
-  $('clinForm').hidden=t!=='clin';$('ncForm').hidden=t!=='non';
+  $('tabClin').setAttribute('aria-pressed',t==='clin');$('tabNon').setAttribute('aria-pressed',t==='non');$('tabLv').setAttribute('aria-pressed',t==='lv');
+  $('clinForm').hidden=t!=='clin';$('ncForm').hidden=t!=='non';$('lvForm').hidden=t!=='lv';
+  if(t==='lv') renderLeave();
 }
-$('tabClin').onclick=()=>setTab('clin'); $('tabNon').onclick=()=>setTab('non');
+$('tabClin').onclick=()=>setTab('clin'); $('tabNon').onclick=()=>setTab('non'); $('tabLv').onclick=()=>setTab('lv');
+
+// ---- leave / away ----
+const LVT=[{id:'al',name:'Annual leave'},{id:'mc',name:'Medical leave'},{id:'el',name:'Emergency / other leave'},{id:'flexi',name:'Flexi day (research / locum / teaching)'},{id:'out',name:'Outstation / official duty'},{id:'ext',name:'Extended hours / weekend clinic'}];
+const LVPART={full:'Full day',am:'Half day (morning)',pm:'Half day (afternoon)'};
+const ymdD=x=>{const [a,b,c]=x.split('-').map(Number);return new Date(Date.UTC(a,b-1,c))};
+const dYmd=d=>d.toISOString().slice(0,10);
+const lvD=x=>ymdD(x).toLocaleDateString('en-GB',{day:'numeric',month:'short',weekday:'short',timeZone:'UTC'});
+function weekdaysIn(f,t){let n=0;for(let d=ymdD(f);d<=ymdD(t);d=new Date(d.getTime()+864e5)){const g=d.getUTCDay();if(g>0&&g<6)n++}return n}
+function weekOf(x){const d=ymdD(x),g=(d.getUTCDay()+6)%7;return dYmd(new Date(d.getTime()-g*864e5))}
+function lvUI(){const t=$('lvType').value,ext=t==='ext',single=ext||t==='flexi'||$('lvPart').value!=='full';
+  $('lvPartWrap').hidden=ext; $('lvHoursWrap').hidden=!ext; $('lvToWrap').hidden=single; $('lvFromLbl').innerHTML=(single?'Date':'From')+' <span class="req">*</span>';
+  $('lvHint').textContent=t==='flexi'?'One flexi day a week (Monday to Sunday) for research, locum or teaching. It is not counted as a clinical day.':t==='ext'?'':'Counts as days away from clinic.';}
+$('lvType').innerHTML=LVT.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+['lvType','lvPart'].forEach(id=>$(id).addEventListener('change',lvUI));
+$('lvFrom').addEventListener('change',()=>{if(!$('lvTo').value||$('lvTo').value<$('lvFrom').value)$('lvTo').value=$('lvFrom').value});
+function renderLeave(){
+  const pre=vy+'-'+pad(vm+1), start=pre+'-01', end=pre+'-'+pad(new Date(vy,vm+1,0).getDate());
+  const L=(state.leave||[]).filter(e=>e.from<=end&&(e.to||e.from)>=start).sort((a,b)=>a.from.localeCompare(b.from));
+  $('lvListHead').textContent=`Leave and away in ${MONTHS[vm]} ${vy}`;
+  $('lvList').innerHTML=L.length?L.map(e=>{const t=byId(LVT,e.type)||{name:e.type}, wd=weekdaysIn(e.from,e.to||e.from);
+    const when=e.type==='ext'?`${lvD(e.from)} · ${e.hours} hr`:(e.to&&e.to!==e.from?`${lvD(e.from)} – ${lvD(e.to)} · ${wd} weekday${wd===1?'':'s'}`:`${lvD(e.from)}${e.part&&e.part!=='full'?' · '+LVPART[e.part].toLowerCase():''}`);
+    return `<li><span class="lt"><b>${esc(t.name)}</b><small>${when}</small></span><button type="button" class="btn sm danger" data-lvdel="${e.id}">Delete</button></li>`}).join('')
+    :'<li class="muted">Nothing logged for this month.</li>';
+}
+$('lvList').addEventListener('click',ev=>{const b=ev.target.closest('[data-lvdel]');if(!b)return;armed(b,'Confirm delete',()=>{state.leave=state.leave.filter(e=>e.id!==b.dataset.lvdel);save();renderLeave();toast('lvToast','Deleted.')})});
+$('lvForm').addEventListener('submit',ev=>{
+  ev.preventDefault(); const err=t=>{$('lvErr').textContent=t};
+  const type=$('lvType').value, ext=type==='ext', part=ext?'full':$('lvPart').value, from=$('lvFrom').value;
+  const single=ext||type==='flexi'||part!=='full', to=single?from:($('lvTo').value||from);
+  if(!from){$('lvFrom').focus();return err('Choose the date.')}
+  if(to<from){$('lvTo').focus();return err('The end date is before the start date.')}
+  if((ymdD(to)-ymdD(from))/864e5>92) return err('That is longer than 3 months. Split it into shorter entries.');
+  let hours; if(ext){hours=Math.round((parseFloat($('lvHours').value)||0)*2)/2; if(hours<0.5||hours>24){$('lvHours').focus();return err('Enter the hours worked, from ½ to 24.')}}
+  else if(!weekdaysIn(from,to)) return err('Those dates are all on a weekend. Only weekdays count as days away.');
+  if(type==='flexi'){const w=weekOf(from); if(state.leave.some(e=>e.type==='flexi'&&weekOf(e.from)===w)) return err('You already have a flexi day in that week (Monday to Sunday). One flexi day a week is allowed.');}
+  const overlap=!ext&&state.leave.find(e=>e.type!=='ext'&&e.from<=to&&(e.to||e.from)>=from&&(part==='full'||e.part==='full'||e.part===part));
+  if(overlap) return err(`This overlaps your ${(byId(LVT,overlap.type)||{name:'entry'}).name.toLowerCase()} on ${lvD(overlap.from)}. Delete that one first.`);
+  const rec={id:uid(),date:from,from,to,part,type,note:''}; if(ext) rec.hours=hours;
+  state.leave.push(rec); err(''); save(); goToDate(from); render(); renderLeave();
+  toast('lvToast',`Saved: ${(byId(LVT,type)||{}).name}${ext?' · '+hours+' hr':''}.`);
+});
+$('lvFrom').value=todayStr; $('lvTo').value=todayStr; lvUI();
 function setReg(t){reg=t;$('regClin').setAttribute('aria-pressed',t==='clin');$('regNon').setAttribute('aria-pressed',t==='non');render()}
 $('regClin').onclick=()=>setReg('clin'); $('regNon').onclick=()=>setReg('non');
 $('filter').addEventListener('input',()=>render());
@@ -1971,6 +2041,7 @@ function persist(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){
 function fnv(s){let h=0x811c9dc5;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,0x01000193)}return (h>>>0).toString(36)}
 function reconcileId(){}
 function wire(e,kind){
+  if(kind==='leave') return {kind,id:e.id,date:e.from,from:e.from,to:e.to||e.from,type:e.type,part:e.part||'full',...(e.type==='ext'?{hours:+e.hours}:{})};
   return kind==='clin'
     ?{kind,id:e.id,date:e.date,type:e.type,dx:dxs(e),cx:e.cx,mins:+e.mins>0?+e.mins:null,calc:e.calc?{t:e.calc.t,p:e.calc.p,r:e.calc.r,score:e.calc.score}:null,...(tagsOf(e).length?{tags:tagsOf(e)}:{})}
     :{kind,id:e.id,date:e.date,type:e.type,other:e.type==='oth'?(e.other||''):'',details:e.details||'',mins:e.mins,...(e.type==='course'&&+e.days>0?{days:+e.days}:{})};
@@ -1987,7 +2058,7 @@ function pendingOps(){
     if(was&&was.d!==d) ops.push({op:'delete',kind:was.k,id:e.id,district:was.d});
     ops.push(Object.assign({op:'upsert',district:d},o,{_h:h}));
   };
-  state.clinical.forEach(e=>add(e,'clin')); state.nonclinical.forEach(e=>add(e,'mgmt'));
+  state.clinical.forEach(e=>add(e,'clin')); state.nonclinical.forEach(e=>add(e,'mgmt')); (state.leave||[]).forEach(e=>add(e,'leave'));
   Object.keys(s.sent).forEach(id=>{if(!live.has(id)){const w=s.sent[id];ops.push({op:'delete',kind:w.k,id,district:w.d})}});
   return ops;
 }
@@ -2171,7 +2242,7 @@ async function submitSetup(){
 }
 function applyLogin(j,prev){
   const f=j.fms, s=syncObj();
-  if(prev&&prev.fmsId&&prev.fmsId!==f.id){ state.clinical=state.clinical.filter(e=>e.example); state.nonclinical=state.nonclinical.filter(e=>e.example); s.sent={}; }
+  if(prev&&prev.fmsId&&prev.fmsId!==f.id){ state.clinical=state.clinical.filter(e=>e.example); state.nonclinical=state.nonclinical.filter(e=>e.example); state.leave=[]; s.sent={}; }
   state.profile={name:f.name,kk:f.kk,district:f.district,fmsId:f.id};
   s.token=j.token; s.err='';
   const who=whoKey(state.profile), have=new Set(state.clinical.map(e=>e.id).concat(state.nonclinical.map(e=>e.id)));
@@ -2185,6 +2256,9 @@ function applyLogin(j,prev){
     if(!have.has(e.id)){ const rec={id:e.id,date:e.date,type:e.type,other:e.other||'',details:e.details||'',mins:+e.mins||0,note:''}; if(+e.days>0) rec.days=+e.days;
       state.nonclinical.push(rec); got++;
       s.sent[e.id]={h:fnv(JSON.stringify(wire(rec,'mgmt'))+who),d:f.district,k:'mgmt'}; } });
+  (E.leave||[]).forEach(e=>{ if(!e||!e.id||!e.from) return;
+    if(!state.leave.some(x=>x.id===e.id)){ const rec={id:e.id,date:e.from,from:e.from,to:e.to||e.from,part:e.part||'full',type:e.type,note:''}; if(+e.hours>0) rec.hours=+e.hours;
+      state.leave.push(rec); got++; s.sent[e.id]={h:fnv(JSON.stringify(wire(rec,'leave'))+who),d:f.district,k:'leave'}; } });
   save();
   return got;
 }
