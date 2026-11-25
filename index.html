@@ -30,7 +30,7 @@ img{max-width:100%}
   --gold:#F2C200; --gold-ink:#7A5E00; --gold-soft:#FFF6D6; --red:#C8102E; --red-soft:#FBE6EA;
   --flag-y:#F7C600; --flag-b:#1D2B8F; --flag-r:#D0102C;
   --ok:#2E7D4F; --warn:#A86A12; --crit:#C8102E;
-  --c1:#23308A; --c2:#C8102E; --c3:#D4A106; --c4:#5C6FD1; --c5:#E26A7E; --c6:#8A6D00; --c7:#0F1A4F; --c8:#9AA6E8;
+  --c1:#23308A; --c2:#C8102E; --c3:#D4A106; --c4:#5C6FD1; --c5:#E26A7E; --c6:#8A6D00; --c7:#0F1A4F; --c8:#9AA6E8; --c9:#2F8F7A;
   --x05:#7DBBA6; --x1:#9AA6E8; --x15:#E2B21A; --x2:#C8102E;
   --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --f-body:"Source Sans 3", "Segoe UI", system-ui, sans-serif;
@@ -43,7 +43,7 @@ img{max-width:100%}
   --gold:#F2C94C; --gold-ink:#F2C94C; --gold-soft:#36301A; --red:#F0677D; --red-soft:#3A1A24;
   --flag-y:#F7C600; --flag-b:#3A4BC4; --flag-r:#E0243F;
   --ok:#5DBB85; --warn:#E0A948; --crit:#F0677D;
-  --c1:#8C9CF0; --c2:#F0677D; --c3:#F2C94C; --c4:#B3BEF7; --c5:#F49AAA; --c6:#D8B54A; --c7:#D2D8FA; --c8:#6E7BC4;
+  --c1:#8C9CF0; --c2:#F0677D; --c3:#F2C94C; --c4:#B3BEF7; --c5:#F49AAA; --c6:#D8B54A; --c7:#D2D8FA; --c8:#6E7BC4; --c9:#6FCBAE;
   --x05:#3E8F76; --x1:#4A5699; --x15:#E2B93B; --x2:#F0677D;
   color-scheme:dark}}
 :root[data-theme="dark"]{
@@ -52,7 +52,7 @@ img{max-width:100%}
   --gold:#F2C94C; --gold-ink:#F2C94C; --gold-soft:#36301A; --red:#F0677D; --red-soft:#3A1A24;
   --flag-y:#F7C600; --flag-b:#3A4BC4; --flag-r:#E0243F;
   --ok:#5DBB85; --warn:#E0A948; --crit:#F0677D;
-  --c1:#8C9CF0; --c2:#F0677D; --c3:#F2C94C; --c4:#B3BEF7; --c5:#F49AAA; --c6:#D8B54A; --c7:#D2D8FA; --c8:#6E7BC4;
+  --c1:#8C9CF0; --c2:#F0677D; --c3:#F2C94C; --c4:#B3BEF7; --c5:#F49AAA; --c6:#D8B54A; --c7:#D2D8FA; --c8:#6E7BC4; --c9:#6FCBAE;
   --x05:#3E8F76; --x1:#4A5699; --x15:#E2B93B; --x2:#F0677D;
   color-scheme:dark}
 *{box-sizing:border-box}
@@ -149,14 +149,14 @@ form.log{display:grid;gap:12px}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .row3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 @media (max-width:420px){.row2{grid-template-columns:1fr}}
-.cx{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.cx{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .cx label{border:1px solid var(--line);border-radius:8px;padding:8px 10px;display:grid;gap:2px;cursor:pointer;background:var(--bg)}
 .cx label:has(input:checked){border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);background:var(--accent-soft)}
 .cx input{position:absolute;opacity:0;width:1px;height:1px}
 .cx label:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
 .cx .t{font-weight:600;font-size:.88rem;line-height:1.25}
 .cx .mult{font-family:var(--f-mono);font-size:.8rem;color:var(--muted)}
-@media (max-width:420px){.cx{grid-template-columns:1fr 1fr}}
+@media (max-width:360px){.cx{grid-template-columns:1fr}}
 .dur{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .durwrap{position:relative}
 .durwrap span{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.85rem;pointer-events:none}
@@ -381,7 +381,7 @@ td.act .acts{display:inline-flex;gap:6px}
     <div class="field"><label for="suDist">District <span class="req">*</span></label><select id="suDist" required></select></div>
     <div class="field"><label for="suKKSel">Klinik Kesihatan <span class="req">*</span></label><select id="suKKSel" required disabled></select></div>
     <div class="field"><label for="suPick">Your name <span class="req">*</span></label><select id="suPick" required disabled></select>
-      <span class="hint" id="suPickHint">From the JKWPKL&amp;P FMS list.</span></div>
+      <span class="hint" id="suPickHint">From the JKWPKL&amp;P FMS list. Not listed? Ask the state FMS to add you.</span></div>
     <div class="field" id="suNameWrap" hidden><label for="suName">Name of FMS <span class="req">*</span></label><input id="suName" placeholder="e.g. Dr Ahmad bin Ali" autocomplete="name">
       <span class="hint">Names not on the list stay on this device only and can't sign in. Ask the state FMS to add you to the roster.</span></div>
     <div id="suPwWrap" hidden style="display:grid;gap:12px">
@@ -389,7 +389,12 @@ td.act .acts{display:inline-flex;gap:6px}
         <input type="password" id="suPw" autocomplete="current-password" minlength="6">
         <span class="hint" id="suPwHint">Your own password. It lets you sign in again and get your log back if this page resets or you change phones.</span></div>
       <div class="field" id="suPw2Wrap" hidden><label for="suPw2">Type the new password again <span class="req">*</span></label><input type="password" id="suPw2" autocomplete="new-password"></div>
+      <div class="field" id="suCodeWrap" hidden><label for="suCode">Setup code <span class="req">*</span></label><input id="suCode" autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="go">
+        <span class="hint">From the state FMS (shared in the FMS group). Needed only the first time you set up.</span></div>
+      <div class="field" id="suMasterWrap" hidden><label for="suMaster">Master reset password <span class="req">*</span></label><input type="password" id="suMaster" autocomplete="off">
+        <span class="hint">Ask the state FMS for it. You then choose a new password above; your log is kept.</span></div>
       <label class="check small" for="suShowPw"><input type="checkbox" id="suShowPw"><span>Show password</span></label>
+      <button type="button" class="btn sm" id="suForgot" hidden style="justify-self:start">Forgot password?</button>
     </div>
     <p class="hint" id="suNoSync" hidden>Signing in with a password and getting your log back works on the website version of this page (ask the state FMS for the link). Here, entries are kept on this device.</p>
     <div class="err" id="suErr" aria-live="polite"></div>
@@ -514,7 +519,6 @@ td.act .acts{display:inline-flex;gap:6px}
           </div>
           <div class="field"><span class="flabel" id="cxLbl">Complexity of case <span class="req">*</span></span>
             <div class="cx" role="radiogroup" aria-labelledby="cxLbl">
-              <label><input type="radio" name="cx" id="cx05" value="0.5"><span class="t">Simple</span><span class="mult">× 0.5</span></label>
               <label><input type="radio" name="cx" id="cx1" value="1" checked><span class="t">Less complex</span><span class="mult">× 1</span></label>
               <label><input type="radio" name="cx" id="cx15" value="1.5"><span class="t">Moderately complex</span><span class="mult">× 1.5</span></label>
               <label><input type="radio" name="cx" id="cx2" value="2"><span class="t">Very complex</span><span class="mult">× 2</span></label>
@@ -526,7 +530,7 @@ td.act .acts{display:inline-flex;gap:6px}
                 <div id="calcDims"></div>
                 <div class="calcres" id="calcRes" aria-live="polite"></div>
                 <div class="btnrow"><button type="button" class="btn sm" id="calcClear">Clear ratings</button></div>
-                <p class="hint">Score = 40% clinical + 30% coordination + 30% risk. Below 1.5 is simple (×0.5), 1.5 to 2.4 is less complex (×1), 2.5 to 3.9 is moderately complex (×1.5), 4.0 and above is very complex (×2).</p>
+                <p class="hint">Score = 40% clinical + 30% coordination + 30% risk. Below 2.5 is less complex (×1), 2.5 to 3.9 is moderately complex (×1.5), 4.0 and above is very complex (×2).</p>
               </div>
             </details>
           </div>
@@ -549,7 +553,11 @@ td.act .acts{display:inline-flex;gap:6px}
           </div>
           <div class="field" id="nOtherWrap" hidden><label for="nOther">Please specify <span class="req">*</span></label><input id="nOther" placeholder="e.g. Community health talk"></div>
           <div class="field"><label for="nDetails">Details of activity <span class="req">*</span></label><textarea id="nDetails" placeholder="e.g. Monthly KK management meeting, chaired NCD agenda" required></textarea></div>
-          <div class="field"><span class="flabel">Time / duration <span class="req">*</span></span>
+          <div class="field" id="nDaysWrap" hidden><label for="nDays">Duration (days) <span class="req">*</span></label>
+            <div class="durwrap" style="max-width:10em"><input type="number" id="nDays" min="0.5" max="30" step="0.5" value="1" inputmode="decimal" aria-label="Number of days"><span>days</span></div>
+            <div class="quick" aria-label="Quick days"><button type="button" class="btn sm" data-days="0.5">½ day</button><button type="button" class="btn sm" data-days="1">1</button><button type="button" class="btn sm" data-days="2">2</button><button type="button" class="btn sm" data-days="3">3</button><button type="button" class="btn sm" data-days="5">5</button></div>
+            <span class="hint">Counted as 8 hours per day in admin / others time.</span></div>
+          <div class="field" id="nTimeWrap"><span class="flabel">Time / duration <span class="req">*</span></span>
             <div class="dur">
               <div class="durwrap"><input type="number" id="nH" min="0" max="24" step="1" value="1" aria-label="Hours"><span>hr</span></div>
               <div class="durwrap"><input type="number" id="nM" min="0" max="59" step="5" value="0" aria-label="Minutes"><span>min</span></div>
@@ -914,9 +922,9 @@ td.act .acts{display:inline-flex;gap:6px}
 const KEY='fms-workload-v2';
 const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const CLIN=[{id:'fms',name:'Case seen by FMS',color:'var(--c1)'},{id:'mo',name:'MO consultation',color:'var(--c2)'},{id:'proc',name:'Procedure',color:'var(--c3)'}];
-const NONC=[{id:'meet',name:'Meetings'},{id:'cme',name:'CME / Teaching'},{id:'res',name:'Research'},{id:'audit',name:'Clinical audits'},{id:'mgmt',name:'Management work'},{id:'qa',name:'QA / QI'},{id:'oth',name:'Others'}]
+const NONC=[{id:'meet',name:'Meetings'},{id:'cme',name:'CME'},{id:'teach',name:'Teaching'},{id:'course',name:'Course / Conference'},{id:'res',name:'Research'},{id:'audit',name:'Clinical audits'},{id:'mgmt',name:'Management work'},{id:'qa',name:'QA / QI'},{id:'oth',name:'Others'}]
   .map((t,i)=>({...t,color:'var(--c'+(i+1)+')'}));
-const CX=[{v:0.5,name:'Simple',color:'var(--x05)'},{v:1,name:'Less complex',color:'var(--x1)'},{v:1.5,name:'Moderately complex',color:'var(--x15)'},{v:2,name:'Very complex',color:'var(--x2)'}];
+const CX=[{v:1,name:'Less complex',color:'var(--x1)'},{v:1.5,name:'Moderately complex',color:'var(--x15)'},{v:2,name:'Very complex',color:'var(--x2)'}];
 const DX=['Uncontrolled T2DM','Resistant hypertension','Hypertension – newly diagnosed','CKD stage 3b','Dyslipidaemia','Obesity class II','HIV on ART – review','COPD exacerbation','Asthma – poorly controlled','Chronic headache','Erectile dysfunction','Thyroid nodule','Anaemia work-up','Multimorbidity – polypharmacy review','Heart failure – follow-up','Depression'];
 const PROC=['Incision & drainage','Wound debridement','Toenail wedge excision','Joint injection','Excision of sebaceous cyst','Implanon insertion'];
 const $=id=>document.getElementById(id);
@@ -953,6 +961,7 @@ function examples(){
     if(wd===4&&r()<.4) nc.push({id:uid(),date,type:'audit',other:'',details:'Diabetes clinic HbA1c audit – data collection',mins:120,note:'',example:true});
     if(wd===5&&r()<.3) nc.push({id:uid(),date,type:'qa',other:'',details:'QI project: reducing missed follow-up in NCD clinic',mins:60,note:'',example:true});
     if(r()<.06) nc.push({id:uid(),date,type:'res',other:'',details:'HyADS proposal writing',mins:90,note:'',example:true});
+    if(r()<.02) nc.push({id:uid(),date,type:'course',other:'',details:'Family Medicine Scientific Conference',mins:960,days:2,note:'',example:true});
     if(r()<.04) nc.push({id:uid(),date,type:'oth',other:'Community health talk',details:'Men’s health talk at community hall',mins:120,note:'',example:true});
   }
   return {clin,nc};
@@ -977,7 +986,7 @@ function parseTags(s){return String(s||'').split(/[;\n]/).map(x=>x.trim()).filte
 const dxKey=s=>String(s).trim().toLowerCase();
 function normalize(s){
   s.targets=s.targets||{weighted:0,hours:0};
-  s.clinical.forEach(e=>{e.dx=dxs(e)});
+  s.clinical.forEach(e=>{e.dx=dxs(e);if(![1,1.5,2].includes(+e.cx))e.cx=1});
   if(!Array.isArray(s.dxList)) s.dxList=DX.concat(PROC);
   const seen=new Set(s.dxList.map(dxKey));
   s.clinical.forEach(e=>e.dx.forEach(d=>{if(!seen.has(dxKey(d))){seen.add(dxKey(d));s.dxList.push(d)}}));
@@ -1146,9 +1155,9 @@ function renderTable(C,N){
     $('thead').innerHTML='<tr><th>Date</th><th>Activity</th><th>Details</th><th class="n">Duration</th><th>Notes</th><th></th></tr>';
     const rows=N.filter(e=>!q||[e.details,e.other,e.note,byId(NONC,e.type)?.name].join(' ').toLowerCase().includes(q)).sort((a,b)=>b.date.localeCompare(a.date));
     $('entryCount').textContent=`${rows.length} activit${rows.length===1?'y':'ies'}`;
-    $('rows').innerHTML=rows.length?rows.map(e=>{const t=byId(NONC,e.type)||NONC[6];
+    $('rows').innerHTML=rows.length?rows.map(e=>{const t=byId(NONC,e.type)||byId(NONC,'oth');
       return `<tr${trc(e)}><td class="num" data-label="Date">${dstr(e.date)}</td><td data-label="Activity"><span class="cat"><span class="sw" style="background:${t.color}"></span>${t.name}${e.type==='oth'&&e.other?`: ${esc(e.other)}`:''}</span></td>
-      <td data-label="Details">${esc(e.details)}</td><td class="n" data-label="Duration">${fmtH(e.mins)}</td><td class="note" data-label="Notes">${esc(e.note)}${ex(e)}</td><td class="act" style="text-align:right">${del(e.id)}</td></tr>`}).join('')
+      <td data-label="Details">${esc(e.details)}</td><td class="n" data-label="Duration">${e.type==='course'&&e.days?daysTxt(e.days)+'<br><span class="muted small">'+fmtH(e.mins)+'</span>':fmtH(e.mins)}</td><td class="note" data-label="Notes">${esc(e.note)}${ex(e)}</td><td class="act" style="text-align:right">${del(e.id)}</td></tr>`}).join('')
       :`<tr><td colspan="6" class="empty">${q?'No activities match your search.':`No admin / other activities for ${MONTHS[vm]}. Switch “Log work” to Admin / Others to add one.`}</td></tr>`;
   }
 }
@@ -1257,7 +1266,7 @@ const DIMS=[
 ];
 let calc={t:0,p:0,r:0};
 const calcScore=c=>(c.t&&c.p&&c.r)?Math.round((c.t*.4+c.p*.3+c.r*.3)*10)/10:null;
-const tierOf=sc=>sc>=4?2:sc>=2.5?1.5:sc>=1.5?1:0.5;
+const tierOf=sc=>sc>=4?2:sc>=2.5?1.5:1;
 function renderCalc(){
   $('calcDims').innerHTML=DIMS.map(d=>`<div class="dim"><div class="dh"><b>${d.name}</b><span>${Math.round(d.w*100)}%</span></div>
     <div class="lv" role="group" aria-label="${d.name}, 1 to 5">${[1,2,3,4,5].map(n=>`<button type="button" data-dim="${d.k}" data-lv="${n}" aria-pressed="${calc[d.k]===n}" title="${esc(d.lv[n-1])}">${n}</button>`).join('')}</div>
@@ -1310,25 +1319,31 @@ $('clinForm').addEventListener('submit',ev=>{
 
 // management form
 $('nType').innerHTML=NONC.map(t=>`<option value="${t.id}">${t.name}${t.id==='oth'?' (please specify)':''}</option>`).join('');
-$('nType').addEventListener('change',()=>{$('nOtherWrap').hidden=$('nType').value!=='oth'});
+function nTypeUI(){const t=$('nType').value;$('nOtherWrap').hidden=t!=='oth';$('nDaysWrap').hidden=t!=='course';$('nTimeWrap').hidden=t==='course'}
+$('nType').addEventListener('change',nTypeUI);
+document.querySelectorAll('[data-days]').forEach(b=>b.onclick=()=>{$('nDays').value=b.dataset.days});
+const HPD=8; // hours counted per course / conference day
+const daysTxt=d=>`${+d} day${+d===1?'':'s'}`;
 document.querySelectorAll('[data-dur]').forEach(b=>b.onclick=()=>{const m=+b.dataset.dur;$('nH').value=Math.floor(m/60);$('nM').value=m%60});
 $('ncForm').addEventListener('submit',ev=>{
   ev.preventDefault();
   const date=$('nDate').value, type=$('nType').value, other=$('nOther').value.trim(), details=$('nDetails').value.trim();
-  const mins=(parseInt($('nH').value,10)||0)*60+(parseInt($('nM').value,10)||0);
+  const days=type==='course'?Math.round((parseFloat($('nDays').value)||0)*2)/2:0;
+  const mins=type==='course'?Math.round(days*HPD*60):(parseInt($('nH').value,10)||0)*60+(parseInt($('nM').value,10)||0);
+  if(type==='course'&&(days<0.5||days>30)){$('nErr').textContent='Enter the number of days, from ½ to 30.';$('nDays').focus();return}
   const miss=[]; if(!date)miss.push('date'); if(type==='oth'&&!other)miss.push('what “Others” is'); if(!details)miss.push('details of the activity'); if(mins<=0)miss.push('a duration');
   if(date&&date>todayStr) miss.push('a date that is not in the future');
   if(mins>24*60) miss.push('a duration of 24 hours or less');
   if(miss.length){$('nErr').textContent='Please enter '+miss.join(', ')+'.';return}
   $('nErr').textContent='';
-  const rec={date,type,other:type==='oth'?other:'',details,mins,note:$('nNote').value.trim()};
+  const rec={date,type,other:type==='oth'?other:'',details,mins,note:$('nNote').value.trim()}; if(type==='course') rec.days=days;
   const wasEdit=editing&&editing.kind==='non'&&state.nonclinical.find(e=>e.id===editing.id);
   if(wasEdit) Object.assign(wasEdit,rec); else state.nonclinical.push({id:uid(),...rec});
   if(wasEdit) endEdit();
   save(); goToDate(date); reg='non'; $('regClin').setAttribute('aria-pressed',false); $('regNon').setAttribute('aria-pressed',true);
   render();
   $('nDetails').value='';$('nNote').value='';$('nOther').value='';
-  toast('nToast',`${wasEdit?'Updated':'Saved'}: ${byId(NONC,type).name} · ${fmtH(mins)}.`);
+  toast('nToast',`${wasEdit?'Updated':'Saved'}: ${byId(NONC,type).name} · ${type==='course'?daysTxt(days)+' ('+fmtH(mins)+')':fmtH(mins)}.`);
 });
 
 // collapsible entries list (remembered on this device)
@@ -1364,7 +1379,7 @@ function startEdit(id){
     $('cEditTxt').textContent=`Editing case from ${fmtDay(c.date)}${c.ic4?` · ${c.ic4}`:''}`; $('cEdit').hidden=false; $('cSubmit').textContent='Update case';
   } else if(n){
     editing={kind:'non',id}; setTab('non');
-    $('nDate').value=n.date; $('nType').value=n.type; $('nOtherWrap').hidden=n.type!=='oth'; $('nOther').value=n.other||'';
+    $('nDate').value=n.date; $('nType').value=byId(NONC,n.type)?n.type:'oth'; nTypeUI(); $('nOther').value=n.other||''; $('nDays').value=n.days||Math.max(0.5,Math.round(n.mins/(HPD*60)*2)/2);
     $('nDetails').value=n.details; $('nH').value=Math.floor(n.mins/60); $('nM').value=n.mins%60; $('nNote').value=n.note||''; $('nErr').textContent='';
     $('nEditTxt').textContent=`Editing ${byId(NONC,n.type)?.name||'activity'} from ${fmtDay(n.date)}`; $('nEdit').hidden=false; $('nSubmit').textContent='Update activity';
   } else return;
@@ -1377,7 +1392,7 @@ function endEdit(){
   return k;
 }
 function clearClin(){resetCalc(false);$('cMin').value='';$('cIC').value='';$('cDx').value='';$('cNote').value='';$('cx1').checked=true;$('cErr').textContent='';pendingDx=[];renderChips();pendingCt=[];renderCt();$('cDate').value=todayStr}
-function clearNon(){$('nDetails').value='';$('nNote').value='';$('nOther').value='';$('nErr').textContent='';$('nH').value=1;$('nM').value=0;$('nDate').value=todayStr}
+function clearNon(){$('nDetails').value='';$('nNote').value='';$('nOther').value='';$('nErr').textContent='';$('nH').value=1;$('nM').value=0;$('nDays').value=1;$('nDate').value=todayStr}
 $('cCancel').onclick=()=>{endEdit();clearClin();render()};
 $('nCancel').onclick=()=>{endEdit();clearNon();render()};
 // switching form tab abandons an unsaved edit
@@ -1535,7 +1550,7 @@ function buildWorkbook(scope){
   D.set(t1tot,2,{f:`SUM(B${a1}:B${b1})`,v:tr},XS.totI);
   D.set(t1tot,3,{f:`SUM(C${a1}:C${b1})`,v:tw},XS.tot1);
   D.set(t1tot,4,{f:`IF(B${t1tot}=0,0,C${t1tot}/B${t1tot})`,v:tr?tw/tr:0},XS.tot2);
-  D.set(t1tot+2,1,'Weighted = cases × complexity multiplier (×0.5, ×1, ×1.5, ×2).',XS.note);
+  D.set(t1tot+2,1,'Weighted = cases × complexity multiplier (×1, ×1.5, ×2).',XS.note);
   D.chart({kind:'col',title:'Raw vs weighted cases by activity',legend:true,labels:true,labelFmt:'0.#',at:{c1:6,r1:t1,c2:LAST,r2:t1+CH-1},
     cats:{ref:D.ref(a1,1,b1,1),vals:CLIN.map(t=>t.name)},
     series:[{name:'Raw cases',nameRef:D.ref(t1,2),ref:D.ref(a1,2,b1,2),vals:CLIN.map(t=>C.filter(e=>e.type===t.id).length),color:HEX.raw},
@@ -1544,7 +1559,7 @@ function buildWorkbook(scope){
 
   // table 2: complexity mix
   const t2=r; head(t2,['Complexity','Multiplier','Cases','% of cases']);
-  const cxColors=[HEX.x05,HEX.x1,HEX.x15,HEX.x2];
+  const cxColors=[HEX.x1,HEX.x15,HEX.x2];
   CX.forEach((x,i)=>{
     const row=t2+1+i,n=C.filter(e=>e.cx===x.v).length;
     D.set(row,1,x.name,XS.td); D.set(row,2,x.v,XS.tdM);
@@ -1630,7 +1645,7 @@ function buildWorkbook(scope){
   const tiles=[
     {c1:1,c2:1,label:'RAW CASES',v:{f:`B${t1tot}`,v:tr},st:XS.kVal,foot:'Patients seen across all clinical activities'},
     {c1:2,c2:3,label:'WEIGHTED CASES',v:{f:`C${t1tot}`,v:tw},st:XS.kVal1,foot:tgtW?`Monthly target: ${tgtW}`:'Raw cases × complexity multiplier'},
-    {c1:4,c2:7,label:'AVERAGE COMPLEXITY',v:{f:`IF(B${t1tot}=0,0,C${t1tot}/B${t1tot})`,v:tr?tw/tr:0},st:XS.kValX,foot:'×0.5 simple · ×1 less · ×1.5 moderate · ×2 very complex'},
+    {c1:4,c2:7,label:'AVERAGE COMPLEXITY',v:{f:`IF(B${t1tot}=0,0,C${t1tot}/B${t1tot})`,v:tr?tw/tr:0},st:XS.kValX,foot:'×1 less · ×1.5 moderate · ×2 very complex'},
     {c1:8,c2:11,label:'CLINICAL HOURS',v:{f:`SUM(${q(CL)}!$${timeCol}:$${timeCol})/60`,v:+(C.reduce((a,e)=>a+(+e.mins||0),0)/60).toFixed(2)},st:XS.kValH,foot:'From time spent logged on cases'},
     {c1:12,c2:14,label:'MANAGEMENT HOURS',v:{f:`C${t4tot}`,v:+(tm/60).toFixed(2)},st:XS.kValH,foot:tgtH?`Monthly target: ${tgtH} h`:'Meetings, CME, audits, QA/QI and more'}
   ];
@@ -1661,7 +1676,7 @@ function buildWorkbook(scope){
       h1.forEach((h,j)=>{if(h in vals)S1.set(row,j+1,vals[h],sts[h]||XS.dTop)});
     }
     const mul=e?e.cx:'', sc=e&&e.calc?e.calc.score:'';
-    S1.set(row,c1('Multiplier'),{f:`IF(${cCx}${row}="Very complex",2,IF(${cCx}${row}="Moderately complex",1.5,IF(${cCx}${row}="Less complex",1,IF(${cCx}${row}="Simple",0.5,""))))`,v:mul},XS.dAuto);
+    S1.set(row,c1('Multiplier'),{f:`IF(${cCx}${row}="Very complex",2,IF(${cCx}${row}="Moderately complex",1.5,IF(${cCx}${row}="Less complex",1,"")))`,v:mul},XS.dAuto);
     S1.set(row,c1('Calculator score'),{f:`IF(COUNT(${cT}${row}:${cR}${row})=3,ROUND(${cT}${row}*0.4+${L(c1('Coordination (1–5)'))}${row}*0.3+${cR}${row}*0.3,1),"")`,v:sc},XS.dAuto);
   }
   S1.autofilter(1,1,CROWS,h1.length);
@@ -1670,7 +1685,7 @@ function buildWorkbook(scope){
   S1.validate(rng('Activity',CROWS),{type:'list',src:"Lists!$A$2:$A$4",title:'Clinical activity',prompt:'Pick from the list.',etitle:'Pick an activity',error:'Choose Case seen by FMS, MO consultation or Procedure.'});
   if(!anon) S1.validate(rng('Patient identifier',CROWS),{type:'textLength',op:'lessThanOrEqual',min:20,title:'Patient identifier (optional)',prompt:'e.g. RN or last 4 of IC. Avoid full IC numbers or names.',etitle:'Too long',error:'Use 20 characters or fewer.'});
   S1.validate(rng('Diagnoses',CROWS),{type:'list',src:`Lists!$D$2:$D$${Math.max(2,state.dxList.length+1)}`,strict:false,title:'Diagnoses',prompt:'Pick from your list or type your own. For several, separate with ; (e.g. T2DM; CKD stage 3b).'});
-  S1.validate(rng('Complexity',CROWS),{type:'list',src:"Lists!$B$2:$B$5",title:'Complexity',prompt:'Simple ×0.5, Less complex ×1, Moderately complex ×1.5, Very complex ×2. Not sure? Fill the three 1–5 ratings and follow the score: below 1.5 simple, 1.5–2.4 less, 2.5–3.9 moderate, 4.0+ very.',etitle:'Pick a level',error:'Choose Simple, Less complex, Moderately complex or Very complex.'});
+  S1.validate(rng('Complexity',CROWS),{type:'list',src:"Lists!$B$2:$B$4",title:'Complexity',prompt:'Less complex ×1, Moderately complex ×1.5, Very complex ×2. Not sure? Fill the three 1–5 ratings and follow the score: below 2.5 less, 2.5–3.9 moderate, 4.0+ very.',etitle:'Pick a level',error:'Choose Less complex, Moderately complex or Very complex.'});
   S1.validate(rng('Multiplier',CROWS),{type:'none',title:'Filled in automatically',prompt:'Worked out from Complexity. No need to type here.'});
   S1.validate(rng('Calculator score',CROWS),{type:'none',title:'Filled in automatically',prompt:'0.4 × clinical + 0.3 × coordination + 0.3 × risk, once all three ratings are filled.'});
   [['Clinical (1–5)','1 single stable condition … 5 several uncontrolled conditions or a serious diagnosis.'],['Coordination (1–5)','1 single consultation … 5 multi-agency coordination or case conference.'],['Risk (1–5)','1 low risk, stable … 5 unstable or emergency.']].forEach(([n,pr])=>
@@ -1689,10 +1704,10 @@ function buildWorkbook(scope){
   }
   S2.autofilter(1,1,NROWS,h2.length);
   S2.validate(`A2:A${NROWS}`,{type:'date',min:DMIN,max:DMAX,title:'Date',prompt:'Type the date, e.g. 21/10/2026.',etitle:'Not a date',error:'Enter a date, e.g. 21/10/2026.'});
-  S2.validate(`B2:B${NROWS}`,{type:'list',src:"Lists!$C$2:$C$8",title:'Activity',prompt:'Pick from the list. For Others, also fill Specify.',etitle:'Pick an activity',error:'Choose an activity from the list.'});
+  S2.validate(`B2:B${NROWS}`,{type:'list',src:"Lists!$C$2:$C$10",title:'Activity',prompt:'Pick from the list. For Others, also fill Specify.',etitle:'Pick an activity',error:'Choose an activity from the list.'});
   S2.validate(`C2:C${NROWS}`,{type:'none',title:'Specify (Others only)',prompt:'Only needed when Activity is Others, e.g. Community health talk.'});
   S2.validate(`D2:D${NROWS}`,{type:'none',title:'Details (required)',prompt:'What the activity was, e.g. Monthly KK management meeting.'});
-  S2.validate(`E2:E${NROWS}`,{type:'whole',min:1,max:1440,title:'Duration in minutes',prompt:'e.g. 30, 60, 120. Half day = 240, full day = 480.',etitle:'Minutes',error:'Enter whole minutes from 1 to 1440.'});
+  S2.validate(`E2:E${NROWS}`,{type:'whole',min:1,max:14400,title:'Duration in minutes',prompt:'e.g. 30, 60, 120. Half day = 240, full day = 480. Course / Conference: 480 per day.',etitle:'Minutes',error:'Enter whole minutes from 1 to 14400.'});
   S2.validate(`F2:F${NROWS}`,{type:'none',title:'Filled in automatically',prompt:'Hours, worked out from minutes.'});
 
   // ---- Diagnoses sheet ----
@@ -1828,7 +1843,7 @@ function parseExport(sheets){
       const g=k=>m[k]>=0?row[m[k]]:null;
       const date=toYMD(g('date')), type=findType(CLIN,g('act'));
       if(!date||!type){res.skipped++;return}
-      let cx=+g('mul'); if(![0.5,1,1.5,2].includes(cx)){const x=CX.find(c=>normH(c.name)===normH(g('cxn')));cx=x?x.v:1}
+      let cx=+g('mul'); if(![1,1.5,2].includes(cx)){const x=CX.find(c=>normH(c.name)===normH(g('cxn')));cx=x?x.v:1}
       const dx=String(g('dx')??'').split(/[;\n]/).map(s=>s.trim()).filter(Boolean);
       const e={date,type,ic4:g('pid')==null?'':String(g('pid')).trim(),dx,cx,note:g('note')==null?'':String(g('note'))};
       const mins=Math.round(+g('mins')); if(mins>0) e.mins=mins;
@@ -1848,7 +1863,7 @@ function parseExport(sheets){
       let mins=Math.round(+g('min')); if(!(mins>0)) mins=Math.round((+g('hrs')||0)*60);
       const details=String(g('details')??'').trim();
       if(!date||!type||!(mins>0)||!details){res.skipped++;return}
-      res.nc.push({date,type,other:type==='oth'?String(g('other')??g('act')??'').trim():'',details,mins,note:g('note')==null?'':String(g('note'))});
+      res.nc.push(Object.assign({date,type,other:type==='oth'?String(g('other')??g('act')??'').trim():'',details,mins,note:g('note')==null?'':String(g('note'))},type==='course'?{days:Math.max(0.5,Math.round(mins/480*2)/2)}:{}));
     });
   }
   const d=sheets['Dashboard'];
@@ -1942,10 +1957,10 @@ $('suRestore').addEventListener('change',async ev=>{
 // from the sheet, and nothing is sent twice. Example entries, patient identifiers and notes are never sent.
 var SYNC_DEFAULT='https://script.google.com/macros/s/AKfycbwicWQZPkocbYozuC7tp1FJy9y3J9COPECGwh4nLAG7LMA2BrQimSA9dfpKS0cmUZ0u/exec'; // the state FMS's Apps Script web app link (ends in /exec); built into the page so FMS don't need to paste it
 var DISTRICTS=['Lembah Pantai','Cheras','Titiwangsa','Kepong','Putrajaya'];
-var ROSTER_EMBED=[{"id":"FMS01","name":"Dr Fatimah Zahrah binti Mohd Zaidan","district":"Lembah Pantai","kk":"KK Tanglin"},{"id":"FMS02","name":"Dr Radhiyah binti Hussin","district":"Lembah Pantai","kk":"KK Tanglin"},{"id":"FMS03","name":"Dr Mohd Hafizul Akmal bin Nordin","district":"Lembah Pantai","kk":"KK Tanglin"},{"id":"FMS04","name":"Dr Avni Patel","district":"Lembah Pantai","kk":"KK Tanglin"},{"id":"FMS05","name":"Dr Chitra Suluraju","district":"Lembah Pantai","kk":"KK Petaling Bahagia"},{"id":"FMS06","name":"Dr Nurul Irma binti Muhamad Tahir","district":"Lembah Pantai","kk":"KK Petaling Bahagia"},{"id":"FMS07","name":"Dr Amelia Teh Jay Yun","district":"Lembah Pantai","kk":"KK Petaling Bahagia"},{"id":"FMS08","name":"Dr Megat Muhammad Haris Megat Zainal","district":"Lembah Pantai","kk":"KK Muhibbah"},{"id":"FMS09","name":"Dr Lim Zhi Han Nicholas","district":"Lembah Pantai","kk":"KK Muhibbah"},{"id":"FMS10","name":"Dr Adam Firdaus Dahlan","district":"Cheras","kk":"KK Sungai Besi"},{"id":"FMS11","name":"Dr Thung Senk Chung","district":"Cheras","kk":"KK Sungai Besi"},{"id":"FMS12","name":"Dr Sailasri Basakran","district":"Cheras","kk":"KK Sungai Besi"},{"id":"FMS13","name":"Dr Dalyana binti Hamid","district":"Cheras","kk":"KK Cheras"},{"id":"FMS14","name":"Dr Anuar bin Mohamad","district":"Cheras","kk":"KK Cheras"},{"id":"FMS15","name":"Dr Wong Ping Foo","district":"Cheras","kk":"KK Cheras"},{"id":"FMS16","name":"Dr Syazwani binti Dzulkifli","district":"Cheras","kk":"KK Cheras"},{"id":"FMS17","name":"Dr Ain Sabrina binti Mohamed Amiruddin","district":"Cheras","kk":"KK Cheras Baru"},{"id":"FMS18","name":"Dr Rosanna Patricia Chryshanthi Gregory","district":"Cheras","kk":"KK Cheras Baru"},{"id":"FMS19","name":"Dr Nurzeiti Yuslinda Yusof","district":"Cheras","kk":"KK Bandar Tun Razak"},{"id":"FMS20","name":"Dr Nur Syarafina binti Abd Aziz","district":"Cheras","kk":"KK Bandar Tun Razak"},{"id":"FMS21","name":"Dr Anu Malar a/p Narkunam","district":"Cheras","kk":"KK Salak Selatan"},{"id":"FMS22","name":"Dr Roslinawati binti Mat Zin","district":"Titiwangsa","kk":"KK Dato Keramat"},{"id":"FMS23","name":"Dr Marina Antony Nicholson","district":"Titiwangsa","kk":"KK Dato Keramat"},{"id":"FMS24","name":"Dr Nur Syahida binti Saadon","district":"Titiwangsa","kk":"UTC Keramat"},{"id":"FMS25","name":"Dr Kow Fei Ping","district":"Titiwangsa","kk":"KK Kuala Lumpur"},{"id":"FMS26","name":"Dr Sathya Rao a/l Jogulu","district":"Titiwangsa","kk":"KK Kuala Lumpur"},{"id":"FMS27","name":"Dr Nagammai Thiagarajan","district":"Titiwangsa","kk":"KK Kuala Lumpur"},{"id":"FMS28","name":"Dr Azira Baharuddin","district":"Titiwangsa","kk":"KK Kuala Lumpur"},{"id":"FMS29","name":"Dr Mohd Amirul Amin bin Mohd Ghani","district":"Titiwangsa","kk":"KK Kuala Lumpur"},{"id":"FMS30","name":"Dr Nadiah binti Othman","district":"Titiwangsa","kk":"KK Kuala Lumpur"},{"id":"FMS31","name":"Dr Sheikh Shariman bin Sheikh Aminuddin","district":"Titiwangsa","kk":"KK Kuala Lumpur"},{"id":"FMS32","name":"Dr Leong Yin Hui","district":"Titiwangsa","kk":"KK Setapak"},{"id":"FMS33","name":"Dr Rafidah Mohd Rafie","district":"Titiwangsa","kk":"KK Setapak"},{"id":"FMS34","name":"Dr Suhaili Naim Mustapa","district":"Titiwangsa","kk":"KK Setapak"},{"id":"FMS35","name":"Dr Nik Farah binti Nik Yusof Fuad","district":"Titiwangsa","kk":"KK Kg Pandan"},{"id":"FMS36","name":"Dr Adilah binti Aidit","district":"Titiwangsa","kk":"KK Kg Pandan"},{"id":"FMS37","name":"Dr Ummul-Hani binti Shahanom","district":"Titiwangsa","kk":"KK Kg Pandan"},{"id":"FMS38","name":"Dr Nor Azlina Siddik","district":"Kepong","kk":"KK Jinjang"},{"id":"FMS39","name":"Dr Atiqah Asbi","district":"Kepong","kk":"KK Jinjang"},{"id":"FMS40","name":"Dr Sathia Kanawathy","district":"Kepong","kk":"KK Jinjang"},{"id":"FMS41","name":"Dr Jasmin 'Aqilah Zahari","district":"Kepong","kk":"KK Batu Muda"},{"id":"FMS42","name":"Dr Loke Yean Yee","district":"Kepong","kk":"KK Batu Muda"},{"id":"FMS43","name":"Dr Chan Hiang Ngee","district":"Kepong","kk":"KK Batu Muda"},{"id":"FMS44","name":"Dr Nurin binti Zainal","district":"Kepong","kk":"KK Sentul"},{"id":"FMS45","name":"Dr Rahmah binti Abdul Rahman","district":"Kepong","kk":"KK Sentul"},{"id":"FMS46","name":"Dr Valarmathi Masilamani","district":"Kepong","kk":"KK Sentul"},{"id":"FMS47","name":"Dr Noreen Ooi Zhi Min","district":"Kepong","kk":"KK Sentul"},{"id":"FMS48","name":"Dr Fatimah binti Ariff","district":"Kepong","kk":"KK Segambut"},{"id":"FMS49","name":"Dr Iliza binti Idris","district":"Putrajaya","kk":"KK Presint 18"},{"id":"FMS50","name":"Dr Hazira Hanum Mohd Yusof","district":"Putrajaya","kk":"KK Presint 18"},{"id":"FMS51","name":"Dr Nurzaitil Aswani Zainuddin","district":"Putrajaya","kk":"KK Presint 18"},{"id":"FMS52","name":"Dr Eleza Nazefah Rosli","district":"Putrajaya","kk":"KK Presint 18"},{"id":"FMS53","name":"Dr Nurainee binti Ibrahim","district":"Putrajaya","kk":"KK Presint 18"},{"id":"FMS54","name":"Dr Nor Azila binti Mohd Isa","district":"Putrajaya","kk":"KK Presint 9"},{"id":"FMS55","name":"Dr Noran binti Ramli","district":"Putrajaya","kk":"KK Presint 9"},{"id":"FMS56","name":"Dr Suriyati binti Draman","district":"Putrajaya","kk":"KK Presint 9"},{"id":"FMS57","name":"Dr Nurfarhana binti Khairul Zaman","district":"Putrajaya","kk":"KK Presint 9"},{"id":"FMS58","name":"Dr Suriani Sulaiman","district":"Putrajaya","kk":"KK Presint 9"},{"id":"FMS59","name":"Dr Alidahani Mohamad Yusof","district":"Putrajaya","kk":"KK Presint 11"}];
+var ROSTER_EMBED=[{"id":"FMS01","name":"Dr Fatimah Zahrah binti Mohd Zaidan","district":"Lembah Pantai","kk":"KK Tanglin"},{"id":"FMS02","name":"Dr Radhiyah binti Hussin","district":"Lembah Pantai","kk":"KK Tanglin"},{"id":"FMS03","name":"Dr Mohd Hafizul Akmal bin Nordin","district":"Lembah Pantai","kk":"KK Tanglin"},{"id":"FMS04","name":"Dr Avni Patel","district":"Lembah Pantai","kk":"KK Tanglin"},{"id":"FMS05","name":"Dr Chitra Suluraju","district":"Lembah Pantai","kk":"KK Petaling Bahagia"},{"id":"FMS06","name":"Dr Nurul Irma binti Muhamad Tahir","district":"Lembah Pantai","kk":"KK Petaling Bahagia"},{"id":"FMS07","name":"Dr Amelia Teh Jay Yun","district":"Lembah Pantai","kk":"KK Petaling Bahagia"},{"id":"FMS08","name":"Dr Megat Muhammad Haris Megat Zainal","district":"Lembah Pantai","kk":"KK Muhibbah"},{"id":"FMS09","name":"Dr Lim Zhi Han Nicholas","district":"Lembah Pantai","kk":"KK Muhibbah"},{"id":"FMS10","name":"Dr Adam Firdaus Dahlan","district":"Cheras","kk":"KK Sungai Besi"},{"id":"FMS11","name":"Dr Thung Senk Chung","district":"Cheras","kk":"KK Sungai Besi"},{"id":"FMS12","name":"Dr Sailasri Basakran","district":"Cheras","kk":"KK Sungai Besi"},{"id":"FMS13","name":"Dr Dalyana binti Hamid","district":"Cheras","kk":"KK Cheras"},{"id":"FMS14","name":"Dr Anuar bin Mohamad","district":"Cheras","kk":"KK Cheras"},{"id":"FMS15","name":"Dr Wong Ping Foo","district":"Cheras","kk":"KK Cheras"},{"id":"FMS16","name":"Dr Syazwani binti Dzulkifli","district":"Cheras","kk":"KK Cheras"},{"id":"FMS17","name":"Dr Ain Sabrina binti Mohamed Amiruddin","district":"Cheras","kk":"KK Cheras Baru"},{"id":"FMS18","name":"Dr Rosanna Patricia Chryshanthi Gregory","district":"Cheras","kk":"KK Cheras Baru"},{"id":"FMS19","name":"Dr Nurzeiti Yuslinda Yusof","district":"Cheras","kk":"KK Bandar Tun Razak"},{"id":"FMS20","name":"Dr Nur Syarafina binti Abd Aziz","district":"Cheras","kk":"KK Bandar Tun Razak"},{"id":"FMS60","name":"Dr Saraswathy","district":"Cheras","kk":"KK Salak Selatan"},{"id":"FMS22","name":"Dr Roslinawati binti Mat Zin","district":"Titiwangsa","kk":"KK Dato Keramat"},{"id":"FMS23","name":"Dr Marina Antony Nicholson","district":"Titiwangsa","kk":"KK Dato Keramat"},{"id":"FMS24","name":"Dr Nur Syahida binti Saadon","district":"Titiwangsa","kk":"UTC Keramat"},{"id":"FMS25","name":"Dr Kow Fei Ping","district":"Titiwangsa","kk":"KK Kuala Lumpur"},{"id":"FMS26","name":"Dr Sathya Rao a/l Jogulu","district":"Titiwangsa","kk":"KK Kuala Lumpur"},{"id":"FMS27","name":"Dr Nagammai Thiagarajan","district":"Titiwangsa","kk":"KK Kuala Lumpur"},{"id":"FMS28","name":"Dr Azira Baharuddin","district":"Titiwangsa","kk":"KK Kuala Lumpur"},{"id":"FMS29","name":"Dr Mohd Amirul Amin bin Mohd Ghani","district":"Titiwangsa","kk":"KK Kuala Lumpur"},{"id":"FMS30","name":"Dr Nadiah binti Othman","district":"Titiwangsa","kk":"KK Kuala Lumpur"},{"id":"FMS31","name":"Dr Sheikh Shariman bin Sheikh Aminuddin","district":"Titiwangsa","kk":"KK Kuala Lumpur"},{"id":"FMS32","name":"Dr Leong Yin Hui","district":"Titiwangsa","kk":"KK Setapak"},{"id":"FMS33","name":"Dr Rafidah Mohd Rafie","district":"Titiwangsa","kk":"KK Setapak"},{"id":"FMS34","name":"Dr Suhaili Naim Mustapa","district":"Titiwangsa","kk":"KK Setapak"},{"id":"FMS35","name":"Dr Nik Farah binti Nik Yusof Fuad","district":"Titiwangsa","kk":"KK Kg Pandan"},{"id":"FMS36","name":"Dr Adilah binti Aidit","district":"Titiwangsa","kk":"KK Kg Pandan"},{"id":"FMS38","name":"Dr Nor Azlina Siddik","district":"Kepong","kk":"KK Jinjang"},{"id":"FMS39","name":"Dr Atiqah Asbi","district":"Kepong","kk":"KK Jinjang"},{"id":"FMS40","name":"Dr Sathia Kanawathy","district":"Kepong","kk":"KK Jinjang"},{"id":"FMS41","name":"Dr Jasmin 'Aqilah Zahari","district":"Kepong","kk":"KK Batu Muda"},{"id":"FMS42","name":"Dr Loke Yean Yee","district":"Kepong","kk":"KK Batu Muda"},{"id":"FMS43","name":"Dr Chan Hiang Ngee","district":"Kepong","kk":"KK Batu Muda"},{"id":"FMS44","name":"Dr Nurin binti Zainal","district":"Kepong","kk":"KK Sentul"},{"id":"FMS45","name":"Dr Rahmah binti Abdul Rahman","district":"Kepong","kk":"KK Sentul"},{"id":"FMS46","name":"Dr Valarmathi Masilamani","district":"Kepong","kk":"KK Sentul"},{"id":"FMS47","name":"Dr Noreen Ooi Zhi Min","district":"Kepong","kk":"KK Sentul"},{"id":"FMS48","name":"Dr Fatimah binti Ariff","district":"Kepong","kk":"KK Segambut"},{"id":"FMS49","name":"Dr Iliza binti Idris","district":"Putrajaya","kk":"KK Presint 18"},{"id":"FMS50","name":"Dr Hazira Hanum Mohd Yusof","district":"Putrajaya","kk":"KK Presint 18"},{"id":"FMS51","name":"Dr Nurzaitil Aswani Zainuddin","district":"Putrajaya","kk":"KK Presint 18"},{"id":"FMS52","name":"Dr Eleza Nazefah Rosli","district":"Putrajaya","kk":"KK Presint 18"},{"id":"FMS53","name":"Dr Nurainee binti Ibrahim","district":"Putrajaya","kk":"KK Presint 18"},{"id":"FMS61","name":"Dr Jolyn","district":"Putrajaya","kk":"KK Presint 18"},{"id":"FMS54","name":"Dr Nor Azila binti Mohd Isa","district":"Putrajaya","kk":"KK Presint 9"},{"id":"FMS55","name":"Dr Noran binti Ramli","district":"Putrajaya","kk":"KK Presint 9"},{"id":"FMS56","name":"Dr Suriyati binti Draman","district":"Putrajaya","kk":"KK Presint 9"},{"id":"FMS57","name":"Dr Nurfarhana binti Khairul Zaman","district":"Putrajaya","kk":"KK Presint 9"},{"id":"FMS58","name":"Dr Suriani Sulaiman","district":"Putrajaya","kk":"KK Presint 9"},{"id":"FMS59","name":"Dr Alidahani Mohamad Yusof","district":"Putrajaya","kk":"KK Presint 11"}];
 var URL_RE=/^https:\/\/script\.google\.com\/(?:a\/macros\/[^\/?#\s]+|macros)\/s\/[\w-]+\/exec(?:\?[^#\s]*)?$/;
 var IN_CLAUDE=!!(window.claude&&window.claude.use);
-var syncing=false,syncTimer=null,syncAgain=false,rosterLoading=null,suMode='first',suNeedsCreate=false,suProbeId='';
+var lostSignIn=false,syncing=false,syncTimer=null,syncAgain=false,rosterLoading=null,suMode='first',suNeedsCreate=false,suProbeId='',suReset=false;
 var DEVICE=(function(){const ua=navigator.userAgent||'';
   const os=/iPhone/.test(ua)?'iPhone':/iPad/.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1)?'iPad':/Android/.test(ua)?'Android':/Mac OS X/.test(ua)?'Mac':/Windows/.test(ua)?'Windows':'Other';
   const br=/Edg\//.test(ua)?'Edge':/Firefox\//.test(ua)?'Firefox':/Chrome\//.test(ua)?'Chrome':/Safari\//.test(ua)?'Safari':'Browser';
@@ -1958,7 +1973,7 @@ function reconcileId(){}
 function wire(e,kind){
   return kind==='clin'
     ?{kind,id:e.id,date:e.date,type:e.type,dx:dxs(e),cx:e.cx,mins:+e.mins>0?+e.mins:null,calc:e.calc?{t:e.calc.t,p:e.calc.p,r:e.calc.r,score:e.calc.score}:null,...(tagsOf(e).length?{tags:tagsOf(e)}:{})}
-    :{kind,id:e.id,date:e.date,type:e.type,other:e.type==='oth'?(e.other||''):'',details:e.details||'',mins:e.mins};
+    :{kind,id:e.id,date:e.date,type:e.type,other:e.type==='oth'?(e.other||''):'',details:e.details||'',mins:e.mins,...(e.type==='course'&&+e.days>0?{days:+e.days}:{})};
 }
 function whoKey(p){return '|'+p.name+'|'+p.kk+'|'+(p.fmsId||'')}
 function pendingOps(){
@@ -1996,7 +2011,7 @@ async function runSync(manual){
       const chunk=all.slice(i,i+200);
       const j=await postJSON({action:'sync',fmsId:p.fmsId,fms:{id:p.fmsId,name:p.name,kk:p.kk,district:p.district},token:s.token,device:DEVICE,
         ops:chunk.map(o=>{const c=Object.assign({},o);delete c._h;return c})});
-      if(j&&j.authError){s.token='';s.err='';break}
+      if(j&&j.authError){s.token='';s.err='';lostSignIn=true;break}
       if(!j||!Array.isArray(j.done)) throw new Error((j&&j.error)||'The state sheet did not accept the entries.');
       const done=new Set(j.done), ups=new Set(chunk.filter(o=>o.op==='upsert').map(o=>o.id));
       chunk.filter(o=>o.op==='delete').forEach(o=>{if(done.has(o.id)&&!ups.has(o.id))delete s.sent[o.id]});
@@ -2005,7 +2020,20 @@ async function runSync(manual){
       s.last=Date.now();
     }
   }catch(e){s.err=IN_CLAUDE?'claude':String(e&&e.message||e).slice(0,160)}
-  finally{syncing=false;persist();renderSync();if(syncAgain){syncAgain=false;scheduleSync(400)}}
+  finally{syncing=false;persist();renderSync();if(lostSignIn){lostSignIn=false;askSignInAgain()}if(syncAgain){syncAgain=false;scheduleSync(400)}}
+}
+
+// the state FMS reset this account (or everyone's): go back to the sign-in / setup screen for this FMS
+function askSignInAgain(){
+  const p=state.profile; if(!p||!p.fmsId||!$('setupView').hidden) return;
+  openSetup('switch');
+  $('suErr').textContent='Your sign-in was reset by the state FMS. Set up your password again to keep sending. Entries on this phone are kept.';
+}
+async function checkSignIn(){
+  const url=syncUrl(), p=state.profile, s=syncObj();
+  if(!url||!p||!p.fmsId||!s.token||navigator.onLine===false) return;
+  try{const j=await postJSON({action:'check',fmsId:p.fmsId,token:s.token});
+    if(j&&j.authError){s.token='';persist();renderSync();askSignInAgain()}}catch(e){}
 }
 
 /* roster */
@@ -2036,7 +2064,7 @@ function fillDist(sel,cur){
 
 /* setup / sign-in screen: district > clinic > name > password */
 function openSetup(mode){
-  suMode=mode; suNeedsCreate=false; suProbeId='';
+  suMode=mode; suNeedsCreate=false; suProbeId=''; suReset=false; $('suCode').value=''; $('suMaster').value='';
   const p=state.profile||{};
   $('suKicker').textContent=mode==='switch'?'SIGN IN':'FIRST-TIME SETUP';
   $('suCancel').hidden=mode!=='switch'; $('suExHint').hidden=mode==='switch';
@@ -2047,7 +2075,7 @@ function openSetup(mode){
   }
   fillSetup(true);
   $('setupView').hidden=false; $('appView').hidden=true;
-  if(syncUrl()&&(!state.sync.roster||Date.now()-(state.sync.roster.at||0)>3600e3)) fetchRoster().then(()=>fillSetup(false)).catch(()=>{});
+  const sr=syncObj().roster; if(syncUrl()&&(!sr||Date.now()-(sr.at||0)>3600e3)) fetchRoster().then(()=>fillSetup(false)).catch(()=>{});
   probePassword();
   setTimeout(()=>{const f=['suDist','suKKSel','suPick'].find(id=>!$(id).value);($(f||'suPw')).focus()},0);
 }
@@ -2058,20 +2086,26 @@ function fillSetup(fromData){
   $('suKKSel').innerHTML='<option value="">'+(d?'Choose clinic…':'Choose district first')+'</option>'+clinics.map(k=>`<option value="${esc(k)}">${esc(k)}</option>`).join('');
   $('suKKSel').value=clinics.includes(kk)?kk:''; $('suKKSel').disabled=!d;
   const k=$('suKKSel').value, pick=keep('suPick'), names=k?namesIn(d,k):[];
-  $('suPick').innerHTML='<option value="">'+(k?'Choose your name…':'Choose clinic first')+'</option>'+names.map(r=>`<option value="${esc(r.id)}">${esc(r.name)}</option>`).join('')+(k?'<option value="__none">My name isn’t listed</option>':'');
+  $('suPick').innerHTML='<option value="">'+(k?'Choose your name…':'Choose clinic first')+'</option>'+names.map(r=>`<option value="${esc(r.id)}">${esc(r.name)}</option>`).join('');
   $('suPick').value=pick&&(pick==='__none'||names.some(r=>r.id===pick))?pick:''; $('suPick').disabled=!k;
   ['suDist','suKKSel','suPick'].forEach(id=>delete $(id).dataset.v);
   const v=$('suPick').value, roster=v&&v!=='__none', url=syncUrl();
   $('suNameWrap').hidden=v!=='__none';
   $('suPwWrap').hidden=!(url&&roster);
   $('suNoSync').hidden=!(roster&&!url);
-  $('suPw2Wrap').hidden=!suNeedsCreate;
-  $('suPwLbl').innerHTML=(suNeedsCreate?'Create your password':'Password')+' <span class="req">*</span>';
-  $('suPw').autocomplete=suNeedsCreate?'new-password':'current-password';
-  $('suPwHint').textContent=suNeedsCreate
-    ?'First time signing in. Choose your own password (at least 6 characters). You’ll use it to sign in again and get your log back if this page resets or you change phones.'
-    :'Your own password. Forgot it? Ask the state FMS to reset it, then create a new one here.';
-  $('suGo').textContent=url&&roster?(suNeedsCreate?'Create password and start':'Sign in'):(suMode==='switch'?'Save':'Start my workload log');
+  const live=!!(url&&roster); if(suNeedsCreate) suReset=false;
+  $('suPw2Wrap').hidden=!(suNeedsCreate||suReset);
+  $('suCodeWrap').hidden=!(live&&suNeedsCreate);
+  $('suMasterWrap').hidden=!(live&&suReset);
+  $('suForgot').hidden=!(live&&!suNeedsCreate); $('suForgot').textContent=suReset?'Back to sign in':'Forgot password?';
+  $('suPwLbl').innerHTML=(suReset?'New password':suNeedsCreate?'Create your password':'Password')+' <span class="req">*</span>';
+  $('suPw').autocomplete=suNeedsCreate||suReset?'new-password':'current-password';
+  $('suPwHint').textContent=suReset
+    ?'Choose a new password (at least 6 characters). Other phones signed in as you will need to sign in again.'
+    :suNeedsCreate
+    ?'First time setting up. Choose your own password (at least 6 characters). You’ll use it to sign in again and get your log back if this page resets or you change phones.'
+    :'Your own password. Forgot it? Tap “Forgot password?” below.';
+  $('suGo').textContent=live?(suReset?'Reset password and sign in':suNeedsCreate?'Create password and start':'Sign in'):(suMode==='switch'?'Save':'Start my workload log');
   $('suIntro').textContent=url
     ?'Log clinical cases with complexity weighting and administrative and other work by time. Entries are saved on this device and sent to your district’s sheet for the state FMS. Patient identifiers and notes stay on this device.'
     :'Log clinical cases with complexity weighting and administrative and other work by time. Entries are saved in this browser on this device.';
@@ -2086,9 +2120,10 @@ async function probePassword(){
     if(j.error&&!j.needsPassword&&!j.hasPassword) $('suErr').textContent=j.error;
   }catch(e){suProbeId=''}
 }
-['suDist','suKKSel'].forEach(id=>$(id).addEventListener('change',()=>{suNeedsCreate=false;suProbeId='';$('suErr').textContent='';fillSetup(false)}));
-$('suPick').addEventListener('change',()=>{suNeedsCreate=false;$('suErr').textContent='';fillSetup(false);probePassword();if($('suPick').value==='__none')$('suName').focus();else if(!$('suPwWrap').hidden)$('suPw').focus()});
-$('suShowPw').addEventListener('change',e=>{$('suPw').type=$('suPw2').type=e.target.checked?'text':'password'});
+['suDist','suKKSel'].forEach(id=>$(id).addEventListener('change',()=>{suNeedsCreate=false;suReset=false;suProbeId='';$('suErr').textContent='';fillSetup(false)}));
+$('suForgot').onclick=()=>{suReset=!suReset;$('suErr').textContent='';$('suPw').value='';$('suPw2').value='';fillSetup(false);(suReset?$('suMaster'):$('suPw')).focus()};
+$('suPick').addEventListener('change',()=>{suNeedsCreate=false;suReset=false;$('suErr').textContent='';fillSetup(false);probePassword();if($('suPick').value==='__none')$('suName').focus();else if(!$('suPwWrap').hidden)$('suPw').focus()});
+$('suShowPw').addEventListener('change',e=>{$('suPw').type=$('suPw2').type=$('suMaster').type=e.target.checked?'text':'password'});
 $('suCancel').onclick=()=>{$('setupView').hidden=true;$('appView').hidden=false;render()};
 $('suUrl').addEventListener('change',e=>{const v=e.target.value.trim();
   if(v&&!URL_RE.test(v)){$('suErr').textContent='That isn’t a state sheet link. It should start with https://script.google.com/ and end with /exec.';return}
@@ -2113,22 +2148,26 @@ async function submitSetup(){
     const n=pendingOps().length;
     if(n) return err(`This device has ${n} entr${n===1?'y':'ies'} for ${prev.name} not yet sent. Ask them to sign in and send, or save a backup, before switching.`);
   }
-  const pw=$('suPw').value;
-  if(suNeedsCreate){
+  const pw=$('suPw').value, code=$('suCode').value.trim(), master=$('suMaster').value;
+  if(suReset&&!master){$('suMaster').focus();return err('Enter the master reset password from the state FMS.')}
+  if(suNeedsCreate||suReset){
     if(pw.length<6){$('suPw').focus();return err('Use at least 6 characters for your password.')}
     if(pw!==$('suPw2').value){$('suPw2').focus();return err('The two passwords don’t match.')}
+    if(suNeedsCreate&&!code){$('suCode').focus();return err('Enter the setup code from the state FMS.')}
   } else if(!pw){$('suPw').focus();return err('Enter your password.')}
-  $('suGo').disabled=true; const label=$('suGo').textContent; $('suGo').textContent='Signing in…'; err('');
+  $('suGo').disabled=true; const label=$('suGo').textContent; $('suGo').textContent=suReset?'Resetting…':'Signing in…'; err('');
   let j;
-  try{ j=await postJSON({action:'login',fmsId:r.id,password:pw,create:suNeedsCreate}); }
+  try{ j=await postJSON(suReset?{action:'reset',fmsId:r.id,master,newPassword:pw}:{action:'login',fmsId:r.id,password:pw,create:suNeedsCreate,setupCode:suNeedsCreate?code:undefined}); }
   catch(e){ $('suGo').disabled=false; $('suGo').textContent=label; return err(netMsg(e)); }
   $('suGo').disabled=false; $('suGo').textContent=label;
-  if(j.needsPassword){ suNeedsCreate=true; fillSetup(false); $('suPw2').value=''; $('suPw').focus(); return err(j.error||'First time signing in: create your own password.'); }
-  if(!j.ok){ $('suPw').select(); return err(j.error||'Could not sign in.'); }
-  const got=applyLogin(j, prev);
-  $('suPw').value=''; $('suPw2').value='';
+  if(j.badCode){ $('suCode').select(); return err(j.error); }
+  if(j.badMaster){ $('suMaster').select(); return err(j.error); }
+  if(j.needsPassword){ suNeedsCreate=true; fillSetup(false); $('suPw2').value=''; $('suPw').focus(); return err(j.error||'First time setting up: create your own password.'); }
+  if(!j.ok){ (suReset?$('suMaster'):$('suPw')).select(); return err(j.error||'Could not sign in.'); }
+  const wasReset=suReset, got=applyLogin(j, prev);
+  $('suPw').value=''; $('suPw2').value=''; $('suCode').value=''; $('suMaster').value=''; suReset=false;
   showView();
-  toast('cToast', j.created?'Password created. You’re signed in.':(got?`Signed in. Restored ${got} entr${got===1?'y':'ies'} from the state sheet.`:'Signed in.'));
+  toast('cToast', wasReset?'Password reset. You’re signed in.':j.created?'Password created. You’re signed in.':(got?`Signed in. Restored ${got} entr${got===1?'y':'ies'} from the state sheet.`:'Signed in.'));
 }
 function applyLogin(j,prev){
   const f=j.fms, s=syncObj();
@@ -2143,7 +2182,7 @@ function applyLogin(j,prev){
       state.clinical.push(rec); rec.dx.forEach(d=>addToList(d)); got++;
       s.sent[e.id]={h:fnv(JSON.stringify(wire(rec,'clin'))+who),d:f.district,k:'clin'}; } });
   (E.management||[]).forEach(e=>{ if(!e||!e.id||!e.date) return;
-    if(!have.has(e.id)){ const rec={id:e.id,date:e.date,type:e.type,other:e.other||'',details:e.details||'',mins:+e.mins||0,note:''};
+    if(!have.has(e.id)){ const rec={id:e.id,date:e.date,type:e.type,other:e.other||'',details:e.details||'',mins:+e.mins||0,note:''}; if(+e.days>0) rec.days=+e.days;
       state.nonclinical.push(rec); got++;
       s.sent[e.id]={h:fnv(JSON.stringify(wire(rec,'mgmt'))+who),d:f.district,k:'mgmt'}; } });
   save();
@@ -2225,6 +2264,7 @@ lastW=$('chart').clientWidth;
   if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{});
 })();
 scheduleSync(1200);
+checkSignIn();
 if(syncUrl()) fetchRoster().then(()=>{if(!$('appView').hidden)render()}).catch(()=>{});
 })();
 </script>
